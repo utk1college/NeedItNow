@@ -1,0 +1,6 @@
+.env
+dist/
+node_modules/
+lambda/node_modules/
+lambda/function.zip
+*.zip

@@ -1,0 +1,7 @@
+{
+  "name": "needitnow-llm-proxy",
+  "version": "1.0.0",
+  "description": "Lambda proxy — Gemini primary, Groq fallback. Node.js ESM. No Bedrock.",
+  "type": "module",
+  "main": "index.mjs"
+}
