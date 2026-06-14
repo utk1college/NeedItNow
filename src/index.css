@@ -7,15 +7,23 @@
     -webkit-tap-highlight-color: transparent;
     box-sizing: border-box;
   }
+  html {
+    background-color: #F7F8FC;
+  }
   body {
-    font-family: 'Inter', system-ui, sans-serif;
-    background-color: #F3F3F3;
-    color: #0F1111;
+    font-family: 'Plus Jakarta Sans', Inter, system-ui, sans-serif;
+    background-color: #F7F8FC;
+    color: #1A1A2E;
     -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
     overscroll-behavior: none;
+    letter-spacing: -0.01em;
   }
   input, textarea, button {
     font-family: inherit;
+  }
+  h1, h2, h3, h4 {
+    letter-spacing: -0.02em;
   }
 }
 
@@ -32,5 +40,28 @@
   }
   .swipe-card {
     touch-action: pan-y;
+  }
+  /* Display font utility */
+  .font-display {
+    font-family: 'Syne', 'Plus Jakarta Sans', sans-serif;
+  }
+  /* Gradient text */
+  .text-gradient-orange {
+    background: linear-gradient(135deg, #FF9900, #FF6B00);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+  .text-gradient-ai {
+    background: linear-gradient(135deg, #667eea, #764ba2);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+  /* Glassmorphism for nav */
+  .glass-nav {
+    backdrop-filter: blur(16px) saturate(180%);
+    -webkit-backdrop-filter: blur(16px) saturate(180%);
+    background: rgba(255, 255, 255, 0.92);
   }
 }

@@ -1,29 +1,30 @@
 import { useState, useEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
-import { ArrowLeft, X, Minus, Plus, ShoppingBag } from 'lucide-react';
+import { ArrowLeft, X, ShoppingBag } from 'lucide-react';
 import { callClaude, PROMPTS } from '../utils/claude';
 import { safeParseJSON, formatPrice } from '../utils/helpers';
 import { LoadingDots } from '../components/LoadingDots';
 import { DeliveryBadge } from '../components/DeliveryBadge';
 import { useCart } from '../context/CartContext';
+import { QuantityStepper } from '../components/QuantityStepper';
 
 const FALLBACKS = {
   'kid fever': [
-    { name: 'Calpol 500mg Tablets', brand: 'GSK', price: 32, reason: 'Reduces fever fast in kids', image: 'https://placehold.co/60x60/DBEAFE/1E40AF?text=Calpol' },
-    { name: 'Omron Digital Thermometer', brand: 'Omron', price: 249, reason: 'Monitor temp accurately', image: 'https://placehold.co/60x60/D1FAE5/065F46?text=Omron' },
-    { name: 'Electral ORS Sachets', brand: 'Electral', price: 65, reason: 'Prevent dehydration', image: 'https://placehold.co/60x60/FCE7F3/9D174D?text=ORS' },
-    { name: 'Vicks VapoRub 50g', brand: 'Vicks', price: 79, reason: 'Ease congestion at night', image: 'https://placehold.co/60x60/EDE9FE/6D28D9?text=Vicks' },
+    { name: 'Calpol 500mg Tablets', brand: 'GSK', price: 32, reason: 'Reduces fever fast in kids', image: 'https://cdn.grofers.com/cdn-cgi/image/f=auto,fit=scale-down,q=70,metadata=none,w=360/app/images/products/sliding_image/282543a.jpg' },
+    { name: 'Omron Digital Thermometer', brand: 'Omron', price: 249, reason: 'Monitor temp accurately', image: 'https://cdn.grofers.com/cdn-cgi/image/f=auto,fit=scale-down,q=70,metadata=none,w=360/app/images/products/sliding_image/387370a.jpg' },
+    { name: 'Electral ORS Sachets', brand: 'Electral', price: 65, reason: 'Prevent dehydration', image: 'https://cdn.grofers.com/cdn-cgi/image/f=auto,fit=scale-down,q=70,metadata=none,w=360/app/images/products/sliding_image/4828a.jpg' },
+    { name: 'Vicks VapoRub 50g', brand: 'Vicks', price: 79, reason: 'Ease congestion at night', image: 'https://cdn.grofers.com/cdn-cgi/image/f=auto,fit=scale-down,q=70,metadata=none,w=360/app/images/products/sliding_image/153073a.jpg' },
   ],
   'guests coming': [
-    { name: 'Paper Plates (50 pcs)', brand: 'Areca', price: 120, reason: 'Hassle-free serving', image: 'https://placehold.co/60x60/FEF9C3/78350F?text=Plates' },
-    { name: 'Thums Up 2L Bottle', brand: 'Thums Up', price: 95, reason: 'Drinks sorted for everyone', image: 'https://placehold.co/60x60/D1FAE5/064E3B?text=ThumsUp' },
-    { name: "Lay's Party Pack Assorted", brand: "Lay's", price: 175, reason: 'Snacking while they arrive', image: 'https://placehold.co/60x60/FEF9C3/713F12?text=PartyPack' },
-    { name: 'Britannia Good Day Cookies', brand: 'Britannia', price: 45, reason: 'Quick dessert option', image: 'https://placehold.co/60x60/FCE7F3/831843?text=GoodDay' },
+    { name: 'Paper Plates (50 pcs)', brand: 'Areca', price: 120, reason: 'Hassle-free serving', image: 'https://cdn.grofers.com/cdn-cgi/image/f=auto,fit=scale-down,q=70,metadata=none,w=360/app/images/products/sliding_image/357952a.jpg' },
+    { name: 'Thums Up 2L Bottle', brand: 'Thums Up', price: 95, reason: 'Drinks sorted for everyone', image: 'https://cdn.grofers.com/cdn-cgi/image/f=auto,fit=scale-down,q=70,metadata=none,w=360/app/images/products/sliding_image/116b.jpg' },
+    { name: "Lay's Party Pack Assorted", brand: "Lay's", price: 175, reason: 'Snacking while they arrive', image: 'https://cdn.grofers.com/cdn-cgi/image/f=auto,fit=scale-down,q=70,metadata=none,w=360/app/images/products/sliding_image/502786a.jpg' },
+    { name: 'Britannia Good Day Cookies', brand: 'Britannia', price: 45, reason: 'Quick dessert option', image: 'https://cdn.grofers.com/cdn-cgi/image/f=auto,fit=scale-down,q=70,metadata=none,w=360/app/images/products/sliding_image/10907a.jpg' },
   ],
   'power cut': [
-    { name: 'Birthday Cake Candles 24pcs', brand: 'Camlin', price: 45, reason: 'Emergency lighting', image: 'https://placehold.co/60x60/FEF3C7/D97706?text=Candles' },
-    { name: 'Bisleri Water 1L (6 pack)', brand: 'Bisleri', price: 120, reason: 'Store drinking water', image: 'https://placehold.co/60x60/DBEAFE/1E40AF?text=Water' },
-    { name: 'Britannia Good Day Cookies', brand: 'Britannia', price: 45, reason: 'No-cook snack option', image: 'https://placehold.co/60x60/FCE7F3/831843?text=GoodDay' },
+    { name: 'Birthday Cake Candles 24pcs', brand: 'Camlin', price: 45, reason: 'Emergency lighting', image: 'https://cdn.grofers.com/cdn-cgi/image/f=auto,fit=scale-down,q=70,metadata=none,w=360/app/images/products/sliding_image/465609a.jpg' },
+    { name: 'Bisleri Water 1L (6 pack)', brand: 'Bisleri', price: 120, reason: 'Store drinking water', image: 'https://cdn.grofers.com/cdn-cgi/image/f=auto,fit=scale-down,q=70,metadata=none,w=360/app/images/products/sliding_image/2680a.jpg' },
+    { name: 'Britannia Good Day Cookies', brand: 'Britannia', price: 45, reason: 'No-cook snack option', image: 'https://cdn.grofers.com/cdn-cgi/image/f=auto,fit=scale-down,q=70,metadata=none,w=360/app/images/products/sliding_image/10907a.jpg' },
   ],
 };
 
@@ -32,26 +33,6 @@ function getFallback(situation) {
   if (s.includes('fever') || s.includes('sick') || s.includes('ill')) return FALLBACKS['kid fever'];
   if (s.includes('guest') || s.includes('party') || s.includes('coming')) return FALLBACKS['guests coming'];
   return FALLBACKS['power cut'];
-}
-
-function QuantityStepper({ qty, onChange }) {
-  return (
-    <div className="flex items-center gap-2">
-      <button
-        onClick={() => onChange(Math.max(0, qty - 1))}
-        className="w-7 h-7 rounded-full border border-gray-200 flex items-center justify-center active:scale-90 transition-all"
-      >
-        <Minus size={12} className="text-gray-600" />
-      </button>
-      <span className="text-sm font-semibold text-gray-900 w-4 text-center">{qty}</span>
-      <button
-        onClick={() => onChange(qty + 1)}
-        className="w-7 h-7 rounded-full bg-[#FF9900] flex items-center justify-center active:scale-90 transition-all"
-      >
-        <Plus size={12} className="text-white" />
-      </button>
-    </div>
-  );
 }
 
 export default function SituationCheckout() {
@@ -64,6 +45,14 @@ export default function SituationCheckout() {
   const [items, setItems] = useState([]);
   const [selected, setSelected] = useState({});
   const [quantities, setQuantities] = useState({});
+
+  const initItems = (result) => {
+    setItems(result);
+    const sel = {}, qty = {};
+    result.forEach((_, idx) => { sel[idx] = true; qty[idx] = 1; });
+    setSelected(sel);
+    setQuantities(qty);
+  };
 
   useEffect(() => {
     (async () => {
@@ -82,34 +71,26 @@ export default function SituationCheckout() {
     })();
   }, [situation]);
 
-  function initItems(result) {
-    setItems(result);
-    const sel = {}, qty = {};
-    result.forEach((_, i) => { sel[i] = true; qty[i] = 1; });
-    setSelected(sel);
-    setQuantities(qty);
-  }
-
-  const selectedItems = items.filter((_, i) => selected[i]);
-  const total = selectedItems.reduce((sum, item, i) => {
+  const selectedItems = items.filter((_, idx) => selected[idx]);
+  const total = selectedItems.reduce((sum, item) => {
     const origIdx = items.indexOf(item);
     return sum + item.price * (quantities[origIdx] || 1);
   }, 0);
 
   const handleOrder = () => {
-    const cartItems = selectedItems.map((item, i) => {
+    const cartItems = selectedItems.map((item) => {
       const origIdx = items.indexOf(item);
       return {
         id: `sc-${origIdx}`,
         name: item.name,
         brand: item.brand,
         price: item.price,
-        image: item.image ?? `https://placehold.co/60x60/FEF3C7/D97706?text=${encodeURIComponent(item.brand ?? 'Item')}`,
+        image: item.image ?? `https://cdn.grofers.com/cdn-cgi/image/f=auto,fit=scale-down,q=70,metadata=none,w=360/app/images/products/sliding_image/391893a.jpg'Item')}`,
         qty: quantities[origIdx] || 1,
       };
     });
     addItems(cartItems);
-    navigate('/order-confirmed', { state: { orderTotal: total, deliveryMins: 14 } });
+    navigate('/payment', { state: { orderTotal: total, deliveryMins: 14 } });
   };
 
   return (
@@ -154,7 +135,7 @@ export default function SituationCheckout() {
                       className="mt-1 accent-[#FF9900] w-4 h-4 flex-shrink-0"
                     />
                     <img
-                      src={item.image ?? `https://placehold.co/60x60/FEF3C7/D97706?text=${encodeURIComponent(item.brand ?? 'Item')}`}
+                      src={item.image ?? `https://cdn.grofers.com/cdn-cgi/image/f=auto,fit=scale-down,q=70,metadata=none,w=360/app/images/products/sliding_image/391893a.jpg'Item')}`}
                       alt={item.name}
                       className="w-14 h-14 rounded-xl object-cover bg-gray-50"
                     />
@@ -195,3 +176,6 @@ export default function SituationCheckout() {
     </div>
   );
 }
+
+
+

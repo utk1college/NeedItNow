@@ -78,6 +78,40 @@ export async function mockCallLLM(systemPrompt, userMessage, imageBase64) {
     });
   }
 
+  // Daily Essentials: consumption-based predictions
+  if (systemPrompt.includes('consumption prediction')) {
+    return JSON.stringify({
+      predictions: [
+        { name: 'Amul Taaza Milk 1L', brand: 'Amul', price: 68, reason: 'You buy this daily — likely finished by tomorrow', daysUntilEmpty: 1 },
+        { name: 'Britannia Brown Bread', brand: 'Britannia', price: 45, reason: 'Ordered every 2 days — due for restock', daysUntilEmpty: 1 },
+        { name: 'Eggs (6 pcs)', brand: 'Farm Fresh', price: 48, reason: 'Used ~2/day, pack runs out tomorrow', daysUntilEmpty: 1 },
+        { name: 'Amul Curd 400g', brand: 'Amul', price: 35, reason: 'Daily breakfast staple, finishes in a day', daysUntilEmpty: 1 },
+        { name: 'Bananas (6 pcs)', brand: 'Fresh', price: 40, reason: 'Ripens fast in summer — order fresh batch', daysUntilEmpty: 2 },
+      ],
+    });
+  }
+
+  // Shopping Missions: AI-generated mission name from product list
+  if (systemPrompt.includes('mission name')) {
+    const msg = userMessage.toLowerCase();
+    if (msg.includes('atta') || msg.includes('oil') || msg.includes('salt') || msg.includes('maggi')) {
+      return JSON.stringify({ name: 'Monthly Grocery Refill', emoji: '🛒' });
+    }
+    if (msg.includes('pampers') || msg.includes('johnson') || msg.includes('formula') || msg.includes('mamy poko')) {
+      return JSON.stringify({ name: 'Baby Care Essentials', emoji: '👶' });
+    }
+    if (msg.includes('colgate') || msg.includes('dove') || msg.includes('whisper') || msg.includes('gillette')) {
+      return JSON.stringify({ name: 'Personal Care Refill', emoji: '🪥' });
+    }
+    if (msg.includes('harpic') || msg.includes('surf') || msg.includes('colin') || msg.includes('scotch')) {
+      return JSON.stringify({ name: 'Home Cleaning Bundle', emoji: '🧹' });
+    }
+    if (msg.includes('calpol') || msg.includes('dettol') || msg.includes('vicks') || msg.includes('ors')) {
+      return JSON.stringify({ name: 'Health Essentials', emoji: '💊' });
+    }
+    return JSON.stringify({ name: 'Regular Essentials', emoji: '🛍️' });
+  }
+
   // Unknown feature — return generic error
   return JSON.stringify({ error: 'Mock: Unknown feature type' });
 }

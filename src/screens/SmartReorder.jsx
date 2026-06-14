@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { ArrowLeft, RefreshCw, ChevronRight, Zap } from 'lucide-react';
+import { ArrowLeft, RefreshCw, ChevronRight } from 'lucide-react';
 import { callClaude, PROMPTS } from '../utils/claude';
 import { safeParseJSON, formatPrice, timeAgo } from '../utils/helpers';
 import { LoadingDots } from '../components/LoadingDots';
@@ -27,6 +27,7 @@ export default function SmartReorder() {
   const { addItem, addItems } = useCart();
   const [loading, setLoading] = useState(true);
   const [predictions, setPredictions] = useState([]);
+  const [selected, setSelected] = useState({}); // index → bool
   const [added, setAdded] = useState({});
 
   useEffect(() => {
@@ -40,9 +41,17 @@ export default function SmartReorder() {
         const { systemPrompt, userMessage } = PROMPTS.smartReorder(summary);
         const raw = await callClaude(systemPrompt, userMessage);
         const parsed = safeParseJSON(raw);
-        setPredictions(parsed?.predictions?.length ? parsed.predictions : FALLBACK_PREDICTIONS);
+        const preds = parsed?.predictions?.length ? parsed.predictions : FALLBACK_PREDICTIONS;
+        setPredictions(preds);
+        // Pre-select all by default
+        const sel = {};
+        preds.forEach((_, i) => { sel[i] = true; });
+        setSelected(sel);
       } catch {
         setPredictions(FALLBACK_PREDICTIONS);
+        const sel = {};
+        FALLBACK_PREDICTIONS.forEach((_, i) => { sel[i] = true; });
+        setSelected(sel);
       } finally {
         setLoading(false);
       }
@@ -55,23 +64,39 @@ export default function SmartReorder() {
     return { ...p, product, daysAgo: matchedOrder?.daysAgo };
   });
 
-  const handleAddAll = () => {
-    const items = enriched.filter(e => e.product).map(e => ({ ...e.product, qty: 1 }));
+  const selectedEnriched = enriched.filter((_, i) => selected[i]);
+  const selectedTotal = selectedEnriched.filter(e => e.product).reduce((s, e) => s + e.product.price, 0);
+  const selectedCount = selectedEnriched.length;
+
+  const toggleAll = () => {
+    const allSelected = enriched.every((_, i) => selected[i]);
+    const sel = {};
+    enriched.forEach((_, i) => { sel[i] = !allSelected; });
+    setSelected(sel);
+  };
+
+  const handleAddSelected = () => {
+    const items = selectedEnriched.filter(e => e.product).map(e => ({ ...e.product, qty: 1 }));
     addItems(items);
-    navigate('/order-confirmed', { state: { orderTotal: items.reduce((s, i) => s + i.price, 0), deliveryMins: 13 } });
+    navigate('/payment', { state: { orderTotal: selectedTotal, deliveryMins: 13 } });
   };
 
   return (
-    <div className="max-w-sm mx-auto min-h-screen pb-32 bg-[#F3F3F3] animate-fade-in">
+    <div className="max-w-sm mx-auto min-h-screen pb-32 bg-[#F7F8FC] animate-fade-in">
       <div className="bg-white px-4 pt-10 pb-4 border-b border-gray-100 sticky top-0 z-10">
         <div className="flex items-center gap-3">
           <button onClick={() => navigate(-1)} className="w-9 h-9 rounded-xl border border-gray-200 flex items-center justify-center active:scale-95 transition-all">
             <ArrowLeft size={18} className="text-gray-700" />
           </button>
-          <div>
+          <div className="flex-1">
             <h1 className="text-base font-bold text-gray-900">Smart Re-order</h1>
             <p className="text-xs text-gray-400">AI-predicted replenishments</p>
           </div>
+          {!loading && (
+            <button onClick={toggleAll} className="text-xs text-[#FF9900] font-semibold active:opacity-70">
+              {enriched.every((_, i) => selected[i]) ? 'Deselect all' : 'Select all'}
+            </button>
+          )}
         </div>
       </div>
 
@@ -80,8 +105,17 @@ export default function SmartReorder() {
           <LoadingDots message="Analysing your order history..." />
         ) : (
           <div className="space-y-3 animate-slide-up">
+            <p className="text-xs text-gray-400 font-medium">
+              {selectedCount} of {enriched.length} selected · tap to pick what you need
+            </p>
             {enriched.map((item, i) => (
-              <div key={i} className="bg-white rounded-2xl border border-gray-100 shadow-sm p-4">
+              <button
+                key={i}
+                onClick={() => setSelected(s => ({ ...s, [i]: !s[i] }))}
+                className={`w-full bg-white rounded-2xl border shadow-sm p-4 text-left transition-all active:scale-[0.98] ${
+                  selected[i] ? 'border-[#FF9900] bg-orange-50/30' : 'border-gray-100 opacity-60'
+                }`}
+              >
                 <div className="flex items-center gap-3">
                   {item.product?.image && (
                     <img src={item.product.image} alt={item.productName} className="w-14 h-14 rounded-xl object-cover bg-gray-50 flex-shrink-0" />
@@ -102,27 +136,32 @@ export default function SmartReorder() {
                           <DeliveryBadge mins={item.product.deliveryMins} />
                         </div>
                         <button
-                          onClick={() => { addItem(item.product, 1); setAdded(a => ({ ...a, [i]: true })); }}
+                          onClick={(e) => { e.stopPropagation(); addItem(item.product, 1); setAdded(a => ({ ...a, [i]: true })); }}
                           className={`text-xs font-bold px-3 py-1.5 rounded-full active:scale-95 transition-all flex items-center gap-1 ${added[i] ? 'bg-green-100 text-green-700' : 'bg-[#FF9900] text-white'}`}
                         >
-                          {added[i] ? '✓ Added' : <>Re-order <ChevronRight size={12} /></>}
+                          {added[i] ? '✓ Added' : <>Add <ChevronRight size={12} /></>}
                         </button>
                       </div>
                     )}
                   </div>
+                  <div className={`w-5 h-5 rounded-full border-2 flex-shrink-0 flex items-center justify-center transition-all ${
+                    selected[i] ? 'bg-[#FF9900] border-[#FF9900]' : 'border-gray-300'
+                  }`}>
+                    {selected[i] && <span className="text-white text-[10px] font-bold">✓</span>}
+                  </div>
                 </div>
-              </div>
+              </button>
             ))}
           </div>
         )}
       </div>
 
-      {!loading && (
-        <div className="fixed bottom-16 left-0 right-0 px-4 pb-4 bg-gradient-to-t from-[#F3F3F3] via-[#F3F3F3] pt-4">
+      {!loading && selectedCount > 0 && (
+        <div className="fixed bottom-16 left-0 right-0 px-4 pb-4 bg-gradient-to-t from-[#F7F8FC] via-[#F7F8FC] pt-4">
           <div className="max-w-sm mx-auto">
-            <button onClick={handleAddAll} className="w-full bg-[#FF9900] text-white rounded-full py-4 font-bold text-sm active:scale-95 transition-all shadow-lg flex items-center justify-center gap-2">
+            <button onClick={handleAddSelected} className="w-full bg-[#FF9900] text-white rounded-full py-4 font-bold text-sm active:scale-95 transition-all shadow-lg flex items-center justify-center gap-2">
               <RefreshCw size={18} />
-              Re-order all suggestions
+              Re-order {selectedCount} item{selectedCount !== 1 ? 's' : ''} · {formatPrice(selectedTotal)}
             </button>
           </div>
         </div>
@@ -130,3 +169,4 @@ export default function SmartReorder() {
     </div>
   );
 }
+

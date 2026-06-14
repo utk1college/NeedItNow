@@ -84,6 +84,21 @@ Given an upcoming calendar event, suggest products the user should order now to 
 Respond ONLY with valid JSON. No markdown, no explanation.
 Format: { "headline": "Perfect for [event]", "items": [{ "name": "...", "price": 89, "reason": "..." }] }
 Max 6 items. Reasons under 8 words. Think practically — what does someone actually need?`,
+
+  dailyEssentials:
+    `You are a consumption prediction AI for Amazon Now India.
+Given a user's order history, estimate which daily-use items are likely to run out by tomorrow.
+Consider typical consumption rates: milk (1L lasts 1 day), bread (lasts 2 days), eggs (6 pack lasts 3 days), fruits (3-4 days), curd (1-2 days).
+Respond ONLY with valid JSON. No markdown, no explanation.
+Format: { "predictions": [{ "name": "...", "brand": "...", "price": 89, "reason": "...", "daysUntilEmpty": 1 }] }
+Max 5 items. Reasons must explain why it will run out. Be specific and practical.`,
+
+  shoppingMissions:
+    `You are a shopping assistant for Amazon Now India.
+Given a list of product names, generate a short human-friendly mission name and a single emoji.
+Respond ONLY with valid JSON. No markdown, no explanation.
+Format: { "name": "Monthly Grocery Refill", "emoji": "🛒" }
+The mission name must be ≤ 4 words, friendly, and category-focused.`,
 };
 
 // ── Prompt builders — return { systemPrompt, userMessage } ───────────────────
@@ -123,5 +138,24 @@ export const PROMPTS = {
   calendarShopping: (event) => ({
     systemPrompt: SYSTEM.calendarShopping,
     userMessage: `Event: ${event.title}, Type: ${event.type}, Days away: ${event.daysFromNow}, Guests: ${event.guests}`,
+  }),
+
+  /**
+   * Daily Essentials — AI predicts what the user will need tomorrow
+   * @returns {{ systemPrompt: string, userMessage: string }}
+   */
+  dailyEssentials: () => ({
+    systemPrompt: SYSTEM.dailyEssentials,
+    userMessage: `User typically orders: milk daily, bread every 2 days, eggs every 3 days, curd daily, bananas every 4 days. Last order was yesterday morning containing: Amul Taaza Milk 1L, Britannia Bread, Amul Curd 400g. Predict what they'll need by tomorrow.`,
+  }),
+
+  /**
+   * Shopping Missions — AI generates a friendly mission name from product list
+   * @param {string[]} productNames  e.g. ["Aashirvaad Atta 5kg", "Fortune Sunflower Oil 1L"]
+   * @returns {{ systemPrompt: string, userMessage: string }}
+   */
+  shoppingMissions: (productNames) => ({
+    systemPrompt: SYSTEM.shoppingMissions,
+    userMessage: `Products: ${productNames.join(', ')}`,
   }),
 };

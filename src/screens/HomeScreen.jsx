@@ -1,105 +1,149 @@
-import { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Search, Camera, AlertCircle, ChevronRight, Users, Zap, RefreshCw, CalendarDays, ArrowRight } from 'lucide-react';
-import { calendarEvents } from '../data/calendarEvents';
+import { Search, Camera, AlertCircle, ChevronRight, Sparkles, ArrowRight, CalendarDays, Target } from 'lucide-react';
 import { orders } from '../data/orders';
-import { getProductById } from '../data/products';
-
-import { daysFromNowLabel } from '../utils/helpers';
+import { getProductById, products } from '../data/products';
 import { DeliveryBadge } from '../components/DeliveryBadge';
+import { analyzePurchasePatterns } from '../utils/missionEngine';
+import { CategoryBrowse } from '../components/CategoryBrowse';
 
-// ── Situation Checkout entry ──────────────────────────────────────────────────
-function SituationCard({ onSubmit }) {
-  const [value, setValue] = useState('');
+// ── Shopping Missions Preview tile (home screen) ─────────────────────────────
+function ShoppingMissionsPreview() {
   const navigate = useNavigate();
 
-  const handleSubmit = (e) => {
-    e.preventDefault();
-    if (!value.trim()) return;
-    navigate('/situation-checkout', { state: { situation: value } });
+  // Run synchronously — no AI, just raw pattern analysis
+  const rawMissions = analyzePurchasePatterns(orders, products);
+  if (rawMissions.length === 0) return null;
+
+  // Sort by soonest refill, take top 2
+  const topMissions = [...rawMissions]
+    .sort((a, b) => a.predictedDaysUntil - b.predictedDaysUntil)
+    .slice(0, 2);
+
+  const EMOJI_MAP = {
+    grocery: '🛒',
+    baby: '👶',
+    personal_care: '🪥',
+    cleaning: '🧹',
+    health: '💊',
+    party: '🎉',
   };
 
-  const quickSituations = [
-    'My kid has fever 🤒',
-    'Guests coming in 1 hr 🏠',
-    'Power cut essentials ⚡',
-  ];
+  const getMissionEmoji = (productIds) => {
+    const catCount = {};
+    for (const pid of productIds) {
+      const p = getProductById(pid);
+      if (p?.category) catCount[p.category] = (catCount[p.category] || 0) + 1;
+    }
+    const cat = Object.entries(catCount).sort((a, b) => b[1] - a[1])[0]?.[0];
+    return EMOJI_MAP[cat] ?? '🛍️';
+  };
+
+  const getMissionLabel = (productIds) => {
+    const catCount = {};
+    for (const pid of productIds) {
+      const p = getProductById(pid);
+      if (p?.category) catCount[p.category] = (catCount[p.category] || 0) + 1;
+    }
+    const labels = {
+      grocery: 'Grocery Refill',
+      baby: 'Baby Essentials',
+      personal_care: 'Personal Care',
+      cleaning: 'Cleaning Bundle',
+      health: 'Health Essentials',
+      party: 'Party Supplies',
+    };
+    const cat = Object.entries(catCount).sort((a, b) => b[1] - a[1])[0]?.[0];
+    return labels[cat] ?? 'Shopping Mission';
+  };
 
   return (
-    <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-4 space-y-3">
-      <div className="flex items-center gap-2 mb-1">
-        <div className="w-8 h-8 bg-orange-50 rounded-xl flex items-center justify-center">
-          <Zap size={16} className="text-[#FF9900]" />
+    <button
+      onClick={() => navigate('/shopping-missions')}
+      className="w-full text-left bg-white rounded-2xl border border-gray-100 shadow-sm p-4 active:scale-[0.98] transition-all"
+    >
+      {/* Header */}
+      <div className="flex items-center justify-between mb-3">
+        <div className="flex items-center gap-2">
+          <div className="w-8 h-8 bg-orange-50 rounded-xl flex items-center justify-center">
+            <Target size={15} className="text-[#FF9900]" />
+          </div>
+          <div>
+            <p className="text-sm font-semibold text-gray-900">Shopping Missions</p>
+            <p className="text-xs text-gray-400">Your recurring routines</p>
+          </div>
         </div>
-        <div>
-          <p className="text-sm font-semibold text-gray-900">Situation Checkout</p>
-          <p className="text-xs text-gray-400">Tell us what's happening</p>
+        <div className="flex items-center gap-1">
+          <span className="bg-orange-50 text-orange-600 text-[9px] font-bold px-1.5 py-0.5 rounded-full">AI</span>
+          <ChevronRight size={14} className="text-gray-400" />
         </div>
       </div>
-      <form onSubmit={handleSubmit} className="flex gap-2">
-        <input
-          type="text"
-          value={value}
-          onChange={e => setValue(e.target.value)}
-          placeholder="What's happening right now?"
-          className="flex-1 bg-gray-50 border border-gray-200 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-[#FF9900] transition-colors"
-        />
-        <button
-          type="submit"
-          disabled={!value.trim()}
-          className="bg-[#FF9900] disabled:opacity-40 text-white rounded-xl px-4 flex items-center justify-center active:scale-95 transition-all"
-        >
-          <ArrowRight size={18} />
-        </button>
-      </form>
-      <div className="flex gap-2 flex-wrap">
-        {quickSituations.map(s => (
-          <button
-            key={s}
-            onClick={() => navigate('/situation-checkout', { state: { situation: s } })}
-            className="bg-orange-50 text-orange-700 text-xs font-medium px-2.5 py-1 rounded-full active:scale-95 transition-all hover:bg-orange-100"
-          >
-            {s}
-          </button>
-        ))}
+
+      {/* Mission rows */}
+      <div className="space-y-2">
+        {topMissions.map((m) => {
+          const isDueNow = m.predictedDaysUntil === 0;
+          const isDueSoon = m.predictedDaysUntil > 0 && m.predictedDaysUntil <= 3;
+          const refillText = isDueNow
+            ? 'Due Now'
+            : m.predictedDaysUntil === 1
+            ? 'Due tomorrow'
+            : `Due in ${m.predictedDaysUntil} days`;
+
+          return (
+            <div
+              key={m.id}
+              className={`flex items-center justify-between rounded-xl px-3 py-2 ${
+                isDueNow
+                  ? 'bg-red-50'
+                  : isDueSoon
+                  ? 'bg-amber-50'
+                  : 'bg-gray-50'
+              }`}
+            >
+              <div className="flex items-center gap-2">
+                <span className="text-lg">{getMissionEmoji(m.productIds)}</span>
+                <div>
+                  <p className="text-xs font-semibold text-gray-900">
+                    {getMissionLabel(m.productIds)}
+                  </p>
+                  <p className="text-[10px] text-gray-400">{m.productIds.length} products</p>
+                </div>
+              </div>
+              <span
+                className={`text-[10px] font-bold ${
+                  isDueNow ? 'text-red-600' : isDueSoon ? 'text-amber-600' : 'text-gray-500'
+                }`}
+              >
+                {refillText}
+              </span>
+            </div>
+          );
+        })}
       </div>
-    </div>
+    </button>
   );
 }
 
 // ── Calendar Events row ───────────────────────────────────────────────────────
-function CalendarRow() {
+function CalendarCard() {
   const navigate = useNavigate();
   return (
-    <div>
-      <div className="flex items-center justify-between mb-3">
-        <div className="flex items-center gap-2">
-          <CalendarDays size={16} className="text-gray-700" />
-          <h2 className="text-sm font-semibold text-gray-900">Coming up</h2>
-        </div>
-        <div className="flex items-center gap-1 bg-green-50 text-green-700 text-xs font-medium px-2 py-1 rounded-full">
-          <span className="w-1.5 h-1.5 rounded-full bg-green-500 animate-pulse" />
-          Calendar synced
-        </div>
+    <button
+      onClick={() => navigate('/calendar-home')}
+      className="w-full flex items-center gap-4 bg-white rounded-2xl border border-gray-100 shadow-sm p-4 text-left active:scale-[0.98] transition-all"
+    >
+      <div
+        className="w-12 h-12 rounded-2xl flex items-center justify-center flex-shrink-0 text-2xl"
+        style={{ background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)' }}
+      >
+        <CalendarDays size={22} className="text-white" />
       </div>
-      <div className="flex gap-3 overflow-x-auto scrollbar-hide pb-1">
-        {calendarEvents.map(event => (
-          <button
-            key={event.id}
-            onClick={() => navigate(`/calendar/${event.id}`)}
-            className="flex-shrink-0 bg-white rounded-2xl border border-gray-100 shadow-sm p-4 w-36 text-left active:scale-95 transition-all hover:border-orange-200"
-          >
-            <span className="text-2xl mb-2 block">{event.emoji}</span>
-            <p className="text-xs font-semibold text-gray-900 leading-tight mb-1">{event.title}</p>
-            <p className="text-[10px] text-[#FF9900] font-medium mb-2">{daysFromNowLabel(event.daysFromNow)}</p>
-            <div className="flex items-center gap-1 text-[10px] text-gray-400 font-medium">
-              See suggestions
-              <ChevronRight size={10} />
-            </div>
-          </button>
-        ))}
+      <div className="flex-1">
+        <p className="text-sm font-bold text-gray-900">My Calendar</p>
+        <p className="text-xs text-gray-400 mt-0.5">Manage occasions · Get prep suggestions</p>
       </div>
-    </div>
+      <ChevronRight size={16} className="text-gray-300 flex-shrink-0" />
+    </button>
   );
 }
 
@@ -130,160 +174,98 @@ function PanicCard() {
   );
 }
 
-// ── Smart Re-order strip ──────────────────────────────────────────────────────
-function ReorderStrip() {
-  const navigate = useNavigate();
-  // Derive top 2 frequent items from order history
-  const freq = {};
-  orders.forEach(o => o.items.forEach(i => {
-    freq[i.productId] = (freq[i.productId] || 0) + i.qty;
-  }));
-  const top2 = Object.entries(freq)
-    .sort((a, b) => b[1] - a[1])
-    .slice(0, 2)
-    .map(([id]) => getProductById(id))
-    .filter(Boolean);
-
-  return (
-    <div>
-      <div className="flex items-center justify-between mb-3">
-        <div className="flex items-center gap-2">
-          <RefreshCw size={15} className="text-gray-700" />
-          <h2 className="text-sm font-semibold text-gray-900">Looks like you're running low</h2>
-        </div>
-        <button
-          onClick={() => navigate('/smart-reorder')}
-          className="text-[#FF9900] text-xs font-semibold active:opacity-70"
-        >
-          See all
-        </button>
-      </div>
-      <div className="space-y-2">
-        {top2.map(p => (
-          <div key={p.id} className="bg-white rounded-2xl border border-gray-100 shadow-sm p-3 flex items-center gap-3">
-            <img src={p.image} alt={p.name} className="w-12 h-12 rounded-xl object-cover bg-gray-50" />
-            <div className="flex-1 min-w-0">
-              <p className="text-sm font-semibold text-gray-900 truncate">{p.name}</p>
-              <p className="text-xs text-gray-400">Ordered {orders.find(o => o.items.some(i => i.productId === p.id)) ? `${orders.find(o => o.items.some(i => i.productId === p.id)).daysAgo} days ago` : 'recently'}</p>
-              <DeliveryBadge mins={p.deliveryMins} />
-            </div>
-            <button
-              onClick={() => navigate('/smart-reorder')}
-              className="bg-[#FF9900] text-white text-xs font-semibold px-3 py-1.5 rounded-full active:scale-95 transition-all flex-shrink-0"
-            >
-              Reorder
-            </button>
-          </div>
-        ))}
-      </div>
-    </div>
-  );
-}
-
-// ── Group Cart card ───────────────────────────────────────────────────────────
-function GroupCartCard() {
-  const navigate = useNavigate();
-  const members = [
-    { initials: 'PR', color: '#7C3AED', name: 'Priya' },
-    { initials: 'DA', color: '#1D8348', name: 'Dad' },
-  ];
-  return (
-    <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-4">
-      <div className="flex items-center justify-between mb-3">
-        <div className="flex items-center gap-2">
-          <div className="w-8 h-8 bg-purple-50 rounded-xl flex items-center justify-center">
-            <Users size={16} className="text-purple-600" />
-          </div>
-          <div>
-            <p className="text-sm font-semibold text-gray-900">Shop together</p>
-            <p className="text-xs text-gray-400">Start a group cart</p>
-          </div>
-        </div>
-        <button
-          onClick={() => navigate('/group-cart')}
-          className="bg-[#FF9900] text-white text-xs font-semibold px-3 py-1.5 rounded-full active:scale-95 transition-all"
-        >
-          + Invite
-        </button>
-      </div>
-      <div className="flex items-center gap-2">
-        {members.map(m => (
-          <div key={m.initials} className="flex items-center gap-1.5 bg-gray-50 rounded-full px-2.5 py-1">
-            <div
-              className="w-5 h-5 rounded-full flex items-center justify-center text-white text-[10px] font-bold"
-              style={{ backgroundColor: m.color }}
-            >
-              {m.initials}
-            </div>
-            <span className="text-xs text-gray-600 font-medium">{m.name}</span>
-          </div>
-        ))}
-        <button
-          onClick={() => navigate('/group-cart')}
-          className="flex items-center gap-1 text-xs text-gray-400 font-medium ml-auto active:opacity-70"
-        >
-          View cart <ChevronRight size={12} />
-        </button>
-      </div>
-    </div>
-  );
-}
-
 // ── Main HomeScreen ───────────────────────────────────────────────────────────
 export default function HomeScreen() {
   const navigate = useNavigate();
 
   return (
-    <div className="max-w-sm mx-auto min-h-screen pb-24 animate-fade-in">
-      {/* Header */}
-      <div className="bg-white px-4 pt-10 pb-4 border-b border-gray-100 sticky top-0 z-10">
-        <div className="flex items-center justify-between mb-3">
+    <div className="max-w-sm mx-auto min-h-screen pb-24 animate-fade-in" style={{ backgroundColor: '#F7F8FC' }}>
+
+      {/* ── HERO HEADER — dark navy gradient ────────────────── */}
+      <div
+        className="sticky top-0 z-50 px-4 pt-10 pb-4"
+        style={{ background: 'linear-gradient(160deg, #1A1A2E 0%, #16213E 70%, #0F3460 100%)' }}
+      >
+        {/* Top row */}
+        <div className="flex items-center justify-between mb-4">
           <div>
-            <p className="text-xs text-gray-400 font-medium">Deliver to</p>
-            <p className="text-sm font-semibold text-gray-900 flex items-center gap-1">
-              Koramangala, Bengaluru
-              <ChevronRight size={14} className="text-[#FF9900]" />
-            </p>
+            <p className="text-[10px] text-white/50 font-medium uppercase tracking-widest mb-0.5">Deliver to</p>
+            <button className="flex items-center gap-1.5">
+              <p className="text-sm font-bold text-white">Koramangala, Bengaluru</p>
+              <ChevronRight size={13} className="text-[#FF9900]" />
+            </button>
           </div>
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-2.5">
             <DeliveryBadge mins={12} />
-            <div className="w-8 h-8 rounded-full bg-orange-50 flex items-center justify-center">
-              <span className="text-sm font-bold text-[#FF9900]">A</span>
-            </div>
+            <button
+              onClick={() => navigate('/profile')}
+              className="w-9 h-9 rounded-full bg-gradient-to-br from-[#FF9900] to-orange-500 flex items-center justify-center shadow-orange"
+            >
+              <span className="text-sm font-extrabold text-white">A</span>
+            </button>
           </div>
         </div>
 
         {/* Search bar */}
         <div className="flex gap-2">
-          <div className="flex-1 flex items-center gap-2 bg-gray-50 border border-gray-200 rounded-xl px-4 py-3">
-            <Search size={16} className="text-gray-400 flex-shrink-0" />
-            <input
-              type="text"
-              placeholder="Search Amazon Now..."
-              className="flex-1 bg-transparent text-sm focus:outline-none text-gray-700 placeholder-gray-400"
-            />
-          </div>
+          <button
+            onClick={() => navigate('/search')}
+            className="flex-1 flex items-center gap-2.5 bg-white/10 border border-white/15 backdrop-blur-sm rounded-2xl px-4 py-3 active:bg-white/20 transition-colors"
+          >
+            <Search size={15} className="text-white/50 flex-shrink-0" />
+            <span className="text-sm text-white/50 font-medium">Search anything...</span>
+          </button>
           <button
             onClick={() => navigate('/photo-to-cart')}
-            className="bg-gray-50 border border-gray-200 rounded-xl px-3 flex items-center justify-center active:scale-95 transition-all hover:border-[#FF9900]"
+            className="bg-white/10 border border-white/15 rounded-2xl px-3 flex items-center justify-center active:scale-95 transition-all"
           >
-            <Camera size={20} className="text-gray-500" />
+            <Camera size={19} className="text-white/60" />
           </button>
         </div>
       </div>
 
-      {/* Scrollable body */}
-      <div className="px-4 pt-4 space-y-5">
-        <CalendarRow />
-        <PanicCard />
-        <SituationCard />
-        <ReorderStrip />
-        <GroupCartCard />
+      {/* ── SCROLLABLE FEED ─────────────────────────────────── */}
+      <div className="px-4 pt-4 space-y-4 pb-28" style={{ isolation: 'isolate' }}>
 
-        {/* Bottom spacer brand */}
+        {/* Emergency Mode — at the top for urgency */}
+        <PanicCard />
+
+        {/* Situation Checkout — star feature */}
+        <button
+          onClick={() => navigate('/situation')}
+          className="w-full flex items-center gap-3 rounded-2xl px-4 py-3.5 active:scale-[0.98] transition-all relative overflow-hidden"
+          style={{
+            background: 'linear-gradient(135deg, #FF9900 0%, #FF6B00 100%)',
+            boxShadow: '0 6px 24px rgba(255,153,0,0.35)',
+          }}
+        >
+          <div className="absolute -right-4 -top-4 w-20 h-20 rounded-full bg-white/10" />
+          <div className="absolute -right-2 -bottom-3 w-12 h-12 rounded-full bg-white/10" />
+          <div className="w-9 h-9 bg-white/20 rounded-2xl flex items-center justify-center flex-shrink-0 relative z-10">
+            <Sparkles size={17} className="text-white" />
+          </div>
+          <div className="flex-1 text-left relative z-10">
+            <p className="text-white text-[15px] font-extrabold leading-tight tracking-tight">Situation Checkout</p>
+            <p className="text-white/75 text-[11px] mt-0.5">Describe what's happening — AI builds your cart</p>
+          </div>
+          <ArrowRight size={17} className="text-white/70 flex-shrink-0 relative z-10" />
+        </button>
+
+        <CalendarCard />
+        <ShoppingMissionsPreview />
+
+        {/* ── BROWSE CATEGORIES ── */}
+        <div className="flex items-center gap-3 -mx-4 px-4 -mt-1">
+          <div className="h-px flex-1 bg-gray-200" />
+          <span className="text-[10px] text-gray-400 font-semibold uppercase tracking-widest">Browse</span>
+          <div className="h-px flex-1 bg-gray-200" />
+        </div>
+        <CategoryBrowse />
+
+        {/* Footer brand */}
         <div className="flex items-center justify-center gap-2 pt-2 pb-4">
           <div className="h-px flex-1 bg-gray-200" />
-          <span className="text-xs text-gray-300 font-medium">amazon now</span>
+          <span className="text-[10px] text-gray-300 font-semibold tracking-widest uppercase">NeedItNow</span>
           <div className="h-px flex-1 bg-gray-200" />
         </div>
       </div>

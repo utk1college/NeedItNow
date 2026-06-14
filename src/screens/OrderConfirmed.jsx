@@ -1,4 +1,4 @@
-import { useEffect, useRef } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { CheckCircle, MapPin, Package } from 'lucide-react';
 import { formatPrice } from '../utils/helpers';
@@ -8,10 +8,13 @@ export default function OrderConfirmed() {
   const { state } = useLocation();
   const progressRef = useRef(null);
 
-  const orderTotal = state?.orderTotal ?? 340;
-  const deliveryMins = state?.deliveryMins ?? 14;
-  const isEmergency = state?.isEmergency ?? false;
-  const orderId = state?.orderId ?? `ORD-${Date.now().toString(36).toUpperCase()}`;
+  const orderTotal   = state?.orderTotal   ?? 340;
+  const deliveryMins = state?.deliveryMins  ?? 14;
+  const isEmergency  = state?.isEmergency   ?? false;
+  // lazy useState initializer runs once — safe from the impure-render lint rule
+  const [orderId] = useState(
+    () => state?.orderId ?? `ORD-${Date.now().toString(36).toUpperCase()}`
+  );
 
   useEffect(() => {
     // Animate progress bar
@@ -24,7 +27,7 @@ export default function OrderConfirmed() {
   }, []);
 
   return (
-    <div className={`max-w-sm mx-auto min-h-screen flex flex-col pb-24 animate-fade-in ${isEmergency ? 'bg-red-50' : 'bg-[#F3F3F3]'}`}>
+    <div className={`max-w-sm mx-auto min-h-screen flex flex-col pb-24 animate-fade-in ${isEmergency ? 'bg-red-50' : 'bg-[#F7F8FC]'}`}>
       {/* Hero Section */}
       <div className={`flex flex-col items-center justify-center px-6 pt-16 pb-10 ${isEmergency ? 'bg-red-600' : 'bg-[#FF9900]'}`}>
         <div className="bg-white rounded-full p-4 mb-4 animate-scale-in shadow-lg">
