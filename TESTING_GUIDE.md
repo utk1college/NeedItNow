@@ -1,150 +1,57 @@
-# Testing Guide: Mock vs Real APIs
+# Testing Guide
 
-## Quick Toggle
+## Two Modes
 
-**File:** `src/utils/claude.js` (Line 12)
+### Mock Testing (Free)
 
-```javascript
-const USE_MOCK = true; // ← TOGGLE THIS
-```
+**File:** `src/utils/claude.js` line 12
 
-### To use MOCK responses (free, unlimited):
 ```javascript
 const USE_MOCK = true;
 ```
-- No API costs
-- Instant responses (~800ms simulated delay)
-- Perfect for frontend development and UI testing
-- All 4 features work with realistic mock data
 
-### To use REAL Gemini/Groq APIs (costs credits):
+- No API keys
+- No setup
+- Instant responses
+- Works offline
+
+### Real API Testing (Team Lead's Lambda)
+
+**File:** `src/utils/claude.js` line 12
+
 ```javascript
 const USE_MOCK = false;
 ```
-- Real AI responses
-- Actual Gemini (primary) + Groq (fallback) model calls
-- Costs ~$0.003–0.015 per request
-- Only do this for final testing before deployment
+
+**Setup:**
+1. Get Lambda URL from team lead
+2. Create `.env`: `VITE_LLM_PROXY_URL=<url>`
+3. Restart dev server
+4. Test features
+5. Switch back to `USE_MOCK = true`
 
 ---
 
-## How to Switch
+## How to Toggle
 
-### Step 1: Open the file
-```
-src/utils/claude.js
-```
+1. Open `src/utils/claude.js`
+2. Line 12: Change between `true` (mock) and `false` (real)
+3. Save
+4. Refresh browser (F5)
 
-### Step 2: Find line 12
-```javascript
-const USE_MOCK = true; // ← TOGGLE THIS TO SWITCH BETWEEN MOCK AND REAL
-```
-
-### Step 3: Change the value
-- **Mock testing:** `const USE_MOCK = true;`
-- **Real API testing:** `const USE_MOCK = false;`
-
-### Step 4: Save and refresh
-1. Save the file (Ctrl+S)
-2. Refresh the browser (F5)
-3. Check the browser console (F12) for confirmation:
-   - Mock: `[LLM] Using MOCK responses`
-   - Real: `[LLM] Using REAL Gemini/Groq via Lambda`
+**Console output tells you which mode is active:**
+- `[LLM] Using MOCK responses` → Mock mode
+- `[LLM] Using REAL Gemini/Groq via Lambda` → Real API mode
 
 ---
 
-## What Gets Mocked
+## Cost
 
-All 4 AI features return realistic mock responses:
-
-| Feature | Mock Response | Real API |
+| Mode | Cost | When to Use |
 |---|---|---|
-| **Situation Checkout** | 5 products for the given situation | Gemini generates custom products |
-| **Smart Reorder** | 4 replenishment predictions | Gemini analyzes order history |
-| **Photo to Cart** | "Blue water bottle" → Bisleri Water | Gemini analyzes the actual image |
-| **Calendar Shopping** | 5 event-specific products | Gemini suggests items for the event |
+| Mock | $0 | Development, UI testing |
+| Real | ~$0.003–0.015/request | Final verification only |
 
 ---
 
-## Testing Workflow
-
-### Development (FREE - Use Mock)
-```
-const USE_MOCK = true;
-```
-1. Refresh app
-2. Test all 4 features multiple times
-3. Verify UI/UX works correctly
-4. No cost, unlimited testing
-
-### Pre-Deployment (REAL - Small Cost)
-```
-const USE_MOCK = false;
-```
-1. Run 1 smoke test per feature (~4 requests)
-2. Verify responses are realistic
-3. Check app handles real API responses correctly
-4. Cost: ~$0.02–0.05 total
-
-### After Deployment (REAL - Production)
-```
-const USE_MOCK = false;
-```
-- Leave as `false` in production
-- Real users get real AI responses
-- Monitor API costs
-
----
-
-## Console Output
-
-### When using MOCK:
-```
-[LLM] Using MOCK responses (set USE_MOCK=false to use real Gemini/Groq)
-```
-
-### When using REAL:
-```
-[LLM] Using REAL Gemini/Groq via Lambda
-```
-
-Open DevTools (F12 → Console) to confirm which mode is active.
-
----
-
-## Cost Comparison
-
-| Scenario | Requests | Cost with Real APIs | Cost with Mock |
-|---|---|---|---|
-| 1 day of dev testing | 50 | ~$0.15–0.75 | $0 |
-| 1 week of dev testing | 350 | ~$1–5 | $0 |
-| Full feature testing | 4 | ~$0.02 | $0 |
-
-**Recommendation:** Use mock for 99% of development, real APIs only for final verification.
-
----
-
-## Troubleshooting
-
-### I see fallback data instead of mock responses
-- Check console for errors
-- Verify `USE_MOCK = true` in `src/utils/claude.js`
-- Restart dev server
-
-### I want to see a real API response
-- Change `USE_MOCK = false`
-- Save and refresh
-- Check console says `[LLM] Using REAL Gemini/Groq`
-- Make a request and watch the Lambda URL in DevTools Network tab
-
-### The mock responses feel fake
-- They are — they're hardcoded for testing
-- Real API is 100x more creative and contextual
-- Use `USE_MOCK = false` to see real responses
-
-### How do I know which API responded?
-- Open DevTools Console (F12)
-- Look for `[LLM]` log message
-- Or check Network tab for requests to your Lambda URL
-  - **If URL appears:** Real API was used
-  - **If no URL appears:** Mock was used
+**Always test with mocks first. Only switch to real for final checks.**

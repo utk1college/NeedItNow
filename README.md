@@ -1,6 +1,6 @@
-# Amazon Now — Reimagining Urgent Shopping
+# NeedItNow — AI-Powered Quick Commerce
 
-> **HackOn Prototype** · React + Vite · AWS Amplify + Lambda + Gemini/Groq
+> React + Vite + Tailwind · AI Features (Gemini/Groq)
 
 ---
 
@@ -12,32 +12,20 @@ Amazon Now reimagined as a mobile-first AI-powered shopping experience purpose-b
 
 ## Features
 
-| # | Feature | Description |
-|---|---------|-------------|
-| 1 | **Situation Checkout** | Type what's happening ("my kid has fever") → AI builds you a cart |
-| 2 | **Panic / Emergency Mode** | One-tap emergency order with live countdown delivery timer |
-| 3 | **Smart Re-order** | AI predicts what you're running low on from order history |
-| 4 | **Photo to Cart** | Upload a photo → AI identifies the product → add to cart |
-| 5 | **Group Cart** | Shop with family, see who added what, split the bill |
-| 6 | **Calendar-aware Shopping** | Calendar events trigger proactive AI shopping suggestions |
+- **Situation Checkout** — Describe a situation, get instant product suggestions
+- **Smart Reorder** — AI predicts what you're running low on
+- **Photo to Cart** — Take a photo, AI identifies the product
+- **Calendar Shopping** — Upcoming events trigger smart suggestions
+- **Panic Mode** — Emergency one-tap ordering
+- **Group Cart** — Shop together with family
 
 ---
 
 ## Architecture
 
-```
-Browser (React + Vite)
-    │
-    │  HTTPS POST  { prompt }
-    ▼
-AWS Lambda (Node.js 20.x) — Function URL (no auth)
-    │
-    │  REST API
-    ▼
-Gemini 2.5 Flash (primary)  OR  Groq Llama-3.3-70B (fallback)
-```
+Frontend (React) → Lambda Proxy → Gemini (primary) or Groq (fallback)
 
-**No model-provider API keys ever reach the browser.** The Lambda is the only component that holds AWS credentials (via its execution role).
+All AI requests go through a Lambda proxy. No API keys in frontend.
 
 ---
 
@@ -54,13 +42,11 @@ Gemini 2.5 Flash (primary)  OR  Groq Llama-3.3-70B (fallback)
 
 ## Tech Stack
 
-- **Frontend:** React 18 + Vite
-- **Styling:** Tailwind CSS v3 (utility-first)
-- **Icons:** lucide-react
-- **Routing:** React Router v6
-- **State:** React useState + useContext (CartContext)
-- **AI:** Gemini / Groq via Lambda proxy (`VITE_LLM_PROXY_URL`)
-- **Mock data:** `/src/data/*.js`
+- React 18 + Vite
+- Tailwind CSS
+- React Router
+- Mock testing system (no external dependencies)
+- Gemini & Groq APIs (backend)
 
 ---
 
@@ -101,86 +87,48 @@ needitnow/
 
 ---
 
-## Setup & Local Development
+## Quick Start
 
-### Prerequisites
-- Node.js 18+
-- npm 9+
-
-### 1. Install dependencies
 ```bash
+git clone https://github.com/utk1college/NeedItNow.git
+cd NeedItNow
 npm install
-```
-
-### 2. Configure environment
-```bash
-# .env (already created — update after Lambda deployment)
-VITE_LLM_PROXY_URL=https://<your-function-url>.lambda-url.us-east-1.on.aws/
-```
-
-The app works fully **without** the Lambda URL — every AI feature has a hardcoded fallback so the demo always runs.
-
-### 3. Run locally
-```bash
 npm run dev
 ```
 
-Open `http://localhost:5173` — use browser DevTools → responsive mode → iPhone 14 (390px) for best experience.
+Open `http://localhost:5173`
+
+**See SETUP_AND_DEPLOY.md for full setup guide.**
 
 ---
 
 ## AWS Deployment
 
-### Step 1 — Get API Keys
-1. Get a Gemini API key from [Google AI Studio](https://aistudio.google.com/)
-2. Get a Groq API key from [Groq Console](https://console.groq.com/)
+The team lead deploys:
+1. Lambda function (LLM proxy)
+2. API Gateway endpoint
+3. Amplify frontend
 
-### Step 2 — Deploy the Lambda Proxy
-```bash
-cd lambda
-pip install -r requirements.txt -t .
-# Windows: use 7-Zip or PowerShell to zip
-Compress-Archive -Path * -DestinationPath function.zip
-```
-
-1. AWS Console → **Lambda** → Create function → Author from scratch
-   - Runtime: **Python 3.12**
-   - Upload `function.zip`
-2. **Configuration → Environment variables:**
-   - `GEMINI_API_KEY` = your Gemini key
-   - `GROQ_API_KEY` = your Groq key
-3. **Configuration → Function URL** → Create → Auth: **NONE** → Enable CORS
-4. Copy the Function URL
-
-### Step 3 — Deploy Frontend to Amplify
-1. Push repo to GitHub
-2. AWS Console → **Amplify** → New app → Host web app → Connect GitHub repo
-3. Build settings are auto-detected (see `amplify.yml`)
-4. **App settings → Environment variables** → Add:
-   - `VITE_LLM_PROXY_URL` = your Lambda Function URL
-5. Deploy → get your live `*.amplifyapp.com` URL
+**See SETUP_AND_DEPLOY.md Part B for details.**
 
 ---
 
-## Demo Flow (4 minutes)
+## Testing
 
-1. **Home** → See "Rohan's Birthday — Tomorrow" card → tap
-2. **Calendar Shopping** → AI birthday suggestions → "Add all to cart"
-3. **Back to Home** → Type *"my kid has fever"* → Situation Checkout → AI cart
-4. **Back to Home** → Tap red Emergency card → Panic Mode with countdown
-5. **Group Cart** → Priya's items appear via toast → show split payment
-6. **Photo to Cart** → "Try sample image" → product detected
+- **Mock mode** (default): Free, instant responses. No setup.
+- **Real API mode**: Test with team lead's Lambda. Ask for the URL.
+
+See TESTING_GUIDE.md for details.
 
 ---
 
-## Design System
+## Design
 
-- **Primary:** `#FF9900` (Amazon Orange) — CTAs only
-- **Background:** `#F3F3F3` · **Surface:** `#FFFFFF`
-- **Font:** Inter (Google Fonts)
-- Mobile-first: `max-w-sm mx-auto` (375px)
-- Animations: fade-in, slide-up, scale-in (Tailwind keyframes)
+- Colors: Orange (#FF9900) for actions, gray backgrounds
+- Mobile-first: Max 390px width
+- Animations: Fade, slide, scale effects
 
 ---
 
-*Built for HackOn — Amazon Now reimagined.*
+**Setup guide:** SETUP_AND_DEPLOY.md  
+**Testing guide:** TESTING_GUIDE.md
