@@ -9,6 +9,8 @@ For teammates setting up the project from scratch, building locally, testing, an
 1. [Local Setup](#local-setup)
 2. [Understanding the Architecture](#understanding-the-architecture)
 3. [Development & Testing](#development--testing)
+   - [Mock Testing (Free)](#mode-1-mock-testing-free-unlimited)
+   - [Real API Testing (Shared Lambda)](#testing-with-the-shared-lambda-for-teammates--no-api-keys-needed)
 4. [Building for Production](#building-for-production)
 5. [AWS Deployment](#aws-deployment)
 6. [Pushing to GitHub](#pushing-to-github)
@@ -229,6 +231,54 @@ npm run dev
 
 # 5. Done — costs ~$0.02 total for verification
 ```
+
+### Testing with the Shared Lambda (For Teammates — No API Keys Needed)
+
+Teammates never need their own Gemini or Groq API keys. The API keys live inside the Lambda on AWS — the Lambda endpoint is all that's needed.
+
+#### Option A: Test the Live Deployed App (Easiest — Zero Setup)
+
+Just open the Amplify URL in a browser:
+```
+https://master.xxxxx.amplifyapp.com
+```
+Ask the project lead for the exact URL. Real Gemini/Groq responses, no setup required.
+
+#### Option B: Test Locally Using the Shared Lambda
+
+Do this when you want to verify real API responses in your local dev build.
+
+**Step 1:** Create a `.env` file in the project root:
+```bash
+# .env
+VITE_LLM_PROXY_URL=https://k82jc863lh.execute-api.ap-south-2.amazonaws.com/default/needitnow-bedrock-proxy
+```
+
+**Step 2:** In `src/utils/claude.js` line 12, switch off mock mode:
+```javascript
+const USE_MOCK = false;
+```
+
+**Step 3:** Start the dev server:
+```bash
+npm run dev
+```
+
+**Step 4:** Test a feature (e.g., Situation Checkout → type `my kid has fever` → submit).
+
+**Step 5:** Check browser console (F12):
+```
+[LLM] Using REAL Gemini/Groq via Lambda
+```
+
+**Step 6:** After testing, switch mock back on to avoid burning API credits:
+```javascript
+const USE_MOCK = true;
+```
+
+> ⚠️ **Cost note:** Each real API request uses the project lead's Gemini/Groq quota (~$0.003–0.015 per request). Test with mocks first (`USE_MOCK = true`) and only switch to real for final verification.
+
+---
 
 ### Browser DevTools Debugging
 
