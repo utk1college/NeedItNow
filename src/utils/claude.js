@@ -1,10 +1,15 @@
 /**
  * LLM proxy client.
  * Sends { systemPrompt, userMessage, imageBase64? } to the Lambda.
- * Lambda tries Gemini first, falls back to Groq automatically.
+ * Lambda tries Gemini (primary) + Groq (fallback).
  * Always returns { text }.
+ *
+ * ⚠️ IMPORTANT: Toggle USE_MOCK to switch between mock responses and real APIs.
+ * - USE_MOCK = true  → Free, unlimited testing with mock responses
+ * - USE_MOCK = false → Real Gemini/Groq API calls (costs credits)
  */
 
+const USE_MOCK = true; // ← TOGGLE THIS TO SWITCH BETWEEN MOCK AND REAL
 const PROXY_URL = import.meta.env.VITE_LLM_PROXY_URL;
 
 /**
@@ -16,6 +21,14 @@ const PROXY_URL = import.meta.env.VITE_LLM_PROXY_URL;
  * @returns {Promise<string>}
  */
 export async function callLLM(systemPrompt, userMessage, imageBase64) {
+  // Use mock if enabled
+  if (USE_MOCK) {
+    const { mockCallLLM } = await import('./mockLLM.js');
+    console.log('[LLM] Using MOCK responses (set USE_MOCK=false to use real Gemini/Groq)');
+    return mockCallLLM(systemPrompt, userMessage, imageBase64);
+  }
+
+  // Real API call
   if (!PROXY_URL || PROXY_URL.includes('your-lambda')) {
     throw new Error('LLM proxy URL not configured — set VITE_LLM_PROXY_URL in .env');
   }
@@ -23,6 +36,7 @@ export async function callLLM(systemPrompt, userMessage, imageBase64) {
   const body = { systemPrompt, userMessage };
   if (imageBase64) body.imageBase64 = imageBase64;
 
+  console.log('[LLM] Using REAL Gemini/Groq via Lambda');
   const response = await fetch(PROXY_URL, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
