@@ -52,8 +52,15 @@ function readStoredSession() {
     const parsed = JSON.parse(stored);
     if (parsed.expiresAt && Date.now() < parsed.expiresAt) {
       // Fix: if stored name looks like a UUID (contains dashes and is long), re-derive from email
-      if (parsed.name && /^[0-9a-f-]{36}$/i.test(parsed.name) && parsed.email) {
-        parsed.name = parsed.email.split("@")[0].replace(/[._-]/g, " ").replace(/\b\w/g, c => c.toUpperCase());
+      if (
+        parsed.name &&
+        /^[0-9a-f-]{36}$/i.test(parsed.name) &&
+        parsed.email
+      ) {
+        parsed.name = parsed.email
+          .split("@")[0]
+          .replace(/[._-]/g, " ")
+          .replace(/\b\w/g, c => c.toUpperCase());
         localStorage.setItem(STORAGE_KEY, JSON.stringify(parsed));
       }
       return parsed;
@@ -117,15 +124,17 @@ export function AuthProvider({ children }) {
         const idPayload = JSON.parse(atob(tokens.id_token.split(".")[1]));
 
         // Derive a friendly display name:
-        // 1. Use 'name' attribute if Cognito collected it
-        // 2. Use email prefix (part before @) as fallback
-        // 3. Last resort: hardcoded default
+        // 1. Use standard 'name' attribute if present
+        // 2. Use custom 'custom:Name' attribute (custom Cognito attributes)
+        // 3. Use email prefix as fallback
+        // 4. Last resort: hardcoded default
         const email = idPayload.email ?? "";
         const emailPrefix = email
           ? email.split("@")[0].replace(/[._-]/g, " ").replace(/\b\w/g, c => c.toUpperCase())
           : "";
         const displayName =
           idPayload.name ??
+          idPayload["custom:Name"] ??
           (idPayload["cognito:username"] && !idPayload["cognito:username"].includes("-")
             ? idPayload["cognito:username"]
             : null) ??
