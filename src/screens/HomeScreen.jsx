@@ -6,6 +6,7 @@ import { DeliveryBadge } from '../components/DeliveryBadge';
 import { analyzePurchasePatterns } from '../utils/missionEngine';
 import { CategoryBrowse } from '../components/CategoryBrowse';
 import { HomeSections } from '../components/HomeSections';
+import { useAuth } from '../context/AuthContext';
 
 // ── Shopping Missions Preview tile (home screen) ─────────────────────────────
 function ShoppingMissionsPreview() {
@@ -178,6 +179,13 @@ function PanicCard() {
 // ── Main HomeScreen ───────────────────────────────────────────────────────────
 export default function HomeScreen() {
   const navigate = useNavigate();
+  const { user } = useAuth();
+
+  const initials = user?.name
+    ? user.name.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2)
+    : user?.email
+    ? user.email[0].toUpperCase()
+    : 'A';
 
   return (
     <div className="max-w-sm mx-auto min-h-screen pb-24 animate-fade-in" style={{ backgroundColor: '#F7F8FC' }}>
@@ -202,7 +210,7 @@ export default function HomeScreen() {
               onClick={() => navigate('/profile')}
               className="w-9 h-9 rounded-full bg-gradient-to-br from-[#FF9900] to-orange-500 flex items-center justify-center shadow-orange"
             >
-              <span className="text-sm font-extrabold text-white">A</span>
+              <span className="text-sm font-extrabold text-white">{initials}</span>
             </button>
           </div>
         </div>

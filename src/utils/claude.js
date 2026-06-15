@@ -9,8 +9,8 @@
  * - USE_MOCK = false → Real Gemini/Groq API calls (costs credits)
  */
 
-const USE_MOCK = true; // ← TOGGLE THIS TO SWITCH BETWEEN MOCK AND REAL
-const PROXY_URL = import.meta.env.VITE_LLM_PROXY_URL;
+const USE_MOCK = false; // ← TOGGLE THIS TO SWITCH BETWEEN MOCK AND REAL
+const PROXY_URL = "https://k82jc863lh.execute-api.ap-south-2.amazonaws.com/default/needitnow-bedrock-proxy";
 
 /**
  * Core fetch wrapper — all LLM calls go through here.
@@ -29,10 +29,6 @@ export async function callLLM(systemPrompt, userMessage, imageBase64) {
   }
 
   // Real API call
-  if (!PROXY_URL || PROXY_URL.includes('your-lambda')) {
-    throw new Error('LLM proxy URL not configured — set VITE_LLM_PROXY_URL in .env');
-  }
-
   const body = { systemPrompt, userMessage };
   if (imageBase64) body.imageBase64 = imageBase64;
 
