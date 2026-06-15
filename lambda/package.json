@@ -1,7 +1,11 @@
 {
   "name": "needitnow-llm-proxy",
-  "version": "1.0.0",
-  "description": "Lambda proxy — Gemini primary, Groq fallback. Node.js ESM. No Bedrock.",
+  "version": "2.0.0",
+  "description": "Lambda — AI proxy + DynamoDB orders/users. Node.js ESM.",
   "type": "module",
-  "main": "index.mjs"
+  "main": "index.mjs",
+  "dependencies": {
+    "@aws-sdk/client-dynamodb": "^3.600.0",
+    "@aws-sdk/lib-dynamodb": "^3.600.0"
+  }
 }

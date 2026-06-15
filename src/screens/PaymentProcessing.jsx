@@ -2,6 +2,8 @@ import { useState, useEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { CheckCircle } from 'lucide-react';
 import { formatPrice } from '../utils/helpers';
+import { saveOrder } from '../utils/api';
+import { useAuth } from '../context/AuthContext';
 
 const PROCESSING_STEPS = [
   { at: 0,    label: 'Connecting to payment gateway...' },
@@ -17,16 +19,20 @@ export default function PaymentProcessing() {
   const navigate  = useNavigate();
   const location  = useLocation();
 
+  const { user } = useAuth();
+
   const {
     orderTotal   = 0,
     deliveryMins = 14,
     isEmergency  = false,
     method       = 'UPI',
+    cartItems    = [],   // passed from PaymentScreen
   } = location.state ?? {};
 
   const [elapsed,   setElapsed]   = useState(0);
   const [stepIdx,   setStepIdx]   = useState(0);
   const [done,      setDone]      = useState(false);
+  const [savedOrderId, setSavedOrderId] = useState(null);
 
   // Progress ticker — updates every 50ms
   useEffect(() => {
@@ -47,17 +53,51 @@ export default function PaymentProcessing() {
     return () => clearInterval(tick);
   }, []);
 
+  // Save order to DynamoDB when payment succeeds
+  useEffect(() => {
+    if (!done) return;
+
+    const persist = async () => {
+      const userId = user?.userId ?? 'demo_aahil';
+      const items  = cartItems.map(i => ({
+        productId: i.id,
+        name:      i.name,
+        price:     i.price,
+        qty:       i.qty,
+      }));
+
+      const { data, error } = await saveOrder({
+        userId,
+        items,
+        total:        orderTotal,
+        paymentMode:  method,
+        deliveryMins,
+        address:      user?.address ?? 'Koramangala, Bengaluru',
+      });
+
+      if (data?.orderId) {
+        setSavedOrderId(data.orderId);
+        console.log('[Order] Saved to DynamoDB:', data.orderId);
+      } else {
+        console.warn('[Order] Save failed:', error);
+      }
+    };
+
+    persist();
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [done]);
+
   // Navigate after success flash
   useEffect(() => {
     if (!done) return;
     const t = setTimeout(() => {
       navigate('/order-confirmed', {
         replace: true,
-        state: { orderTotal, deliveryMins, isEmergency },
+        state: { orderTotal, deliveryMins, isEmergency, orderId: savedOrderId },
       });
     }, 800);
     return () => clearTimeout(t);
-  }, [done, navigate, orderTotal, deliveryMins, isEmergency]);
+  }, [done, savedOrderId, navigate, orderTotal, deliveryMins, isEmergency]);
 
   const progress = Math.min((elapsed / TOTAL_MS) * 100, 100);
   const currentStep = PROCESSING_STEPS[stepIdx];

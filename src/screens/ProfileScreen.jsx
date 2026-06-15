@@ -1,14 +1,16 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
   ArrowLeft, Camera, MapPin, Phone, Calendar, Mail,
   Edit2, Check, ChevronRight, ShoppingBag, Package,
-  Star, Zap, CreditCard, RefreshCw, Clock,
+  Star, Zap, CreditCard, RefreshCw, Clock, LogOut,
 } from 'lucide-react';
-import { orders, orderStats } from '../data/orders';
+import { orders as hardcodedOrders, orderStats } from '../data/orders';
 import { getProductById } from '../data/products';
 import { formatPrice } from '../utils/helpers';
 import { useCart } from '../context/CartContext';
+import { useAuth } from '../context/AuthContext';
+import { fetchOrders } from '../utils/api';
 
 // ── Profile data ──────────────────────────────────────────────────────────────
 const DEFAULT_PROFILE = {
@@ -225,10 +227,72 @@ function OrderCard({ order, onReorder }) {
 export default function ProfileScreen() {
   const navigate = useNavigate();
   const { addItems } = useCart();
-  const [profile, setProfile] = useState(DEFAULT_PROFILE);
+  const { user, signOut } = useAuth();
+
+  // Seed profile from Cognito user if available
+  const seedProfile = {
+    ...DEFAULT_PROFILE,
+    name:  user?.name  ?? DEFAULT_PROFILE.name,
+    email: user?.email ?? DEFAULT_PROFILE.email,
+  };
+
+  const [profile, setProfile] = useState(seedProfile);
   const [editing, setEditing] = useState(false);
-  const [editData, setEditData] = useState(DEFAULT_PROFILE);
+  const [editData, setEditData] = useState(seedProfile);
   const [activeTab, setActiveTab] = useState('profile'); // 'profile' | 'orders'
+
+  // ── Real orders from DynamoDB, merged with hardcoded seed data ──────────────
+  const [liveOrders, setLiveOrders] = useState(hardcodedOrders);
+  const [ordersLoading, setOrdersLoading] = useState(false);
+
+  useEffect(() => {
+    if (!user?.userId) return;
+    let cancelled = false;
+
+    Promise.resolve()
+      .then(() => {
+        if (!cancelled) setOrdersLoading(true);
+        return fetchOrders(user.userId);
+      })
+      .then(({ data, error }) => {
+        if (cancelled) return;
+        if (data?.orders?.length) {
+          // Normalise DynamoDB orders to the same shape as hardcoded ones
+          const normalised = data.orders.map(o => ({
+            id:          o.orderId,
+            date:        o.date,
+            displayDate: new Date(o.timestamp ?? o.date).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' }),
+            items:       (o.items ?? []).map(i => ({ productId: i.productId, qty: i.qty })),
+            total:       o.total,
+            daysAgo:     Math.floor((Date.now() - new Date(o.timestamp ?? o.date).getTime()) / 86400000),
+            status:      o.status ?? 'delivered',
+            deliveryMins: o.deliveryMins ?? 14,
+            address:     o.address ?? 'Koramangala, Bengaluru',
+            paymentMode: o.paymentMode ?? 'UPI',
+            savingsAmount: o.savingsAmount ?? 0,
+          }));
+          // Merge: live orders first, then seed data (deduplicated by id)
+          const liveIds = new Set(normalised.map(o => o.id));
+          const merged  = [...normalised, ...hardcodedOrders.filter(o => !liveIds.has(o.id))];
+          setLiveOrders(merged);
+        } else if (error) {
+          console.warn('[Profile] Orders fetch error:', error, '— using seed data');
+        }
+      })
+      .finally(() => {
+        if (!cancelled) setOrdersLoading(false);
+      });
+
+    return () => { cancelled = true; };
+  }, [user?.userId]);
+
+  // Derived stats — recalculate if live orders are available
+  const computedStats = {
+    ...orderStats,
+    totalOrders: liveOrders.length,
+    totalSpent:  liveOrders.reduce((s, o) => s + o.total, 0),
+    totalSaved:  liveOrders.reduce((s, o) => s + (o.savingsAmount ?? 0), 0),
+  };
 
   const handleSave = () => { setProfile(editData); setEditing(false); };
   const handleCancel = () => { setEditData(profile); setEditing(false); };
@@ -263,7 +327,7 @@ export default function ProfileScreen() {
     navigate('/cart');
   };
 
-  const monthGroups = groupOrdersByMonth(orders);
+  const monthGroups = groupOrdersByMonth(liveOrders);
 
   return (
     <div className="max-w-sm mx-auto min-h-screen bg-[#F7F8FC] pb-24 animate-fade-in">
@@ -313,9 +377,9 @@ export default function ProfileScreen() {
         {/* Stats strip */}
         <div className="flex gap-2 mt-4 relative z-10">
           {[
-            { label: 'Orders', value: orderStats.totalOrders },
-            { label: 'Saved', value: formatPrice(orderStats.totalSaved) },
-            { label: 'Avg order', value: formatPrice(orderStats.avgOrderValue) },
+            { label: 'Orders',    value: computedStats.totalOrders },
+            { label: 'Saved',     value: formatPrice(computedStats.totalSaved) },
+            { label: 'Avg order', value: formatPrice(computedStats.avgOrderValue) },
           ].map(s => (
             <div key={s.label} className="flex-1 bg-white/15 rounded-2xl p-2.5 text-center">
               <p className="text-white text-sm font-extrabold">{s.value}</p>
@@ -356,11 +420,14 @@ export default function ProfileScreen() {
               <span className="text-[10px] text-gray-400">Last 6 months</span>
             </div>
             <div className="grid grid-cols-2 gap-3">
-              <SummaryTile icon={<ShoppingBag size={16} className="text-[#FF9900]" />} label="Total Orders" value={orderStats.totalOrders.toString()} bg="bg-orange-50" />
-              <SummaryTile icon={<Star size={16} className="text-yellow-500" />} label="Total Saved" value={formatPrice(orderStats.totalSaved)} bg="bg-yellow-50" />
-              <SummaryTile icon={<CreditCard size={16} className="text-blue-500" />} label="Total Spent" value={formatPrice(orderStats.totalSpent)} bg="bg-blue-50" />
+              <SummaryTile icon={<ShoppingBag size={16} className="text-[#FF9900]" />} label="Total Orders" value={computedStats.totalOrders.toString()} bg="bg-orange-50" />
+              <SummaryTile icon={<Star size={16} className="text-yellow-500" />} label="Total Saved" value={formatPrice(computedStats.totalSaved)} bg="bg-yellow-50" />
+              <SummaryTile icon={<CreditCard size={16} className="text-blue-500" />} label="Total Spent" value={formatPrice(computedStats.totalSpent)} bg="bg-blue-50" />
               <SummaryTile icon={<Zap size={16} className="text-green-500" />} label="Avg Delivery" value="12 min" bg="bg-green-50" />
             </div>
+            {ordersLoading && (
+              <p className="text-[10px] text-gray-400 text-center mt-2">Syncing live orders from DynamoDB...</p>
+            )}
           </div>
 
           {/* Orders grouped by month */}
@@ -433,6 +500,15 @@ export default function ProfileScreen() {
                 <SettingRow label="Payment Method" value="UPI — Amazon Pay" />
                 <SettingRow label="Language" value="English" />
               </div>
+
+              {/* Sign out */}
+              <button
+                onClick={signOut}
+                className="w-full bg-white rounded-2xl border border-gray-100 shadow-sm p-4 flex items-center justify-center gap-2 text-sm font-semibold text-red-600 active:scale-95 transition-all"
+              >
+                <LogOut size={16} />
+                Sign Out
+              </button>
             </>
           )}
         </div>

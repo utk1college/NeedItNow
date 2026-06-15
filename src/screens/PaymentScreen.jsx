@@ -3,7 +3,6 @@ import { useNavigate, useLocation } from 'react-router-dom';
 import { ArrowLeft, ChevronRight, Lock, Shield } from 'lucide-react';
 import { formatPrice } from '../utils/helpers';
 import { useCart } from '../context/CartContext';
-
 // ── Payment methods ───────────────────────────────────────────────────────────
 const UPI_APPS = [
   { id: 'gpay',    label: 'Google Pay',   color: '#4285F4', icon: '🔵', upiId: 'aahil@gpay' },
@@ -59,7 +58,7 @@ function MethodRow({ selected, onSelect, left, title, subtitle, right }) {
 export default function PaymentScreen() {
   const navigate  = useNavigate();
   const location  = useLocation();
-  const { clearCart } = useCart();
+  const { clearCart, cartItems } = useCart();
 
   const {
     orderTotal    = 0,
@@ -68,11 +67,10 @@ export default function PaymentScreen() {
   } = location.state ?? {};
 
   const [selected, setSelected] = useState('gpay');
-
   const handlePay = () => {
     navigate('/payment-processing', {
       replace: true,
-      state: { orderTotal, deliveryMins, isEmergency, method: selected },
+      state: { orderTotal, deliveryMins, isEmergency, method: selected, cartItems },
     });
     clearCart();
   };
