@@ -17,10 +17,10 @@ const CATEGORIES = [
     badge: 'Runs out tomorrow',
     badgeBg: 'bg-blue-200 text-blue-800',
     items: [
-      { id: 'de_d1', name: 'Amul Taaza Milk 1L', brand: 'Amul', price: 68, mrp: 72, reason: 'Daily staple', image: 'https://cdn.grofers.com/cdn-cgi/image/f=auto,fit=scale-down,q=70,metadata=none,w=360/app/images/products/sliding_image/391893a.jpg' },
-      { id: 'de_d2', name: 'Amul Curd 400g', brand: 'Amul', price: 35, mrp: 40, reason: 'Breakfast must', image: 'https://cdn.grofers.com/cdn-cgi/image/f=auto,fit=scale-down,q=70,metadata=none,w=360/app/images/products/sliding_image/493219a.jpg' },
-      { id: 'de_d3', name: 'Eggs (6 pcs)', brand: 'Farm Fresh', price: 48, mrp: 54, reason: 'Used 2/day', image: 'https://cdn.grofers.com/cdn-cgi/image/f=auto,fit=scale-down,q=70,metadata=none,w=360/app/images/products/sliding_image/474886a.jpg' },
-      { id: 'de_d4', name: 'Amul Butter 100g', brand: 'Amul', price: 56, mrp: 62, reason: 'Goes with bread', image: 'https://cdn.grofers.com/cdn-cgi/image/f=auto,fit=scale-down,q=70,metadata=none,w=360/app/images/products/sliding_image/16241a.jpg' },
+      { id: 'de_d1', name: 'Amul Taaza Milk 1L', brand: 'Amul', price: 68, mrp: 72, reason: 'Daily staple', image: '/products/p010.jpg' },
+      { id: 'de_d2', name: 'Amul Curd 400g', brand: 'Amul', price: 35, mrp: 40, reason: 'Breakfast must', image: '/products/p010.jpg' },
+      { id: 'de_d3', name: 'Eggs (6 pcs)', brand: 'Farm Fresh', price: 48, mrp: 54, reason: 'Used 2/day', image: '/products/p009.jpg' },
+      { id: 'de_d4', name: 'Amul Butter 100g', brand: 'Amul', price: 56, mrp: 62, reason: 'Goes with bread', image: '/products/p013.jpg' },
     ],
   },
   {
@@ -34,10 +34,10 @@ const CATEGORIES = [
     badge: 'Freshness alert',
     badgeBg: 'bg-green-200 text-green-800',
     items: [
-      { id: 'de_f1', name: 'Bananas (6 pcs)', brand: 'Fresh', price: 40, mrp: 50, reason: 'Ripen in 1–2 days', image: 'https://cdn.grofers.com/cdn-cgi/image/f=auto,fit=scale-down,q=70,metadata=none,w=360/app/images/products/sliding_image/195a.jpg' },
-      { id: 'de_f2', name: 'Tomato (500g)', brand: 'Fresh', price: 25, mrp: 32, reason: 'Daily cooking', image: 'https://cdn.grofers.com/cdn-cgi/image/f=auto,fit=scale-down,q=70,metadata=none,w=360/app/images/products/sliding_image/192a.jpg' },
-      { id: 'de_f3', name: 'Onion (500g)', brand: 'Fresh', price: 20, mrp: 28, reason: 'Used every meal', image: 'https://cdn.grofers.com/cdn-cgi/image/f=auto,fit=scale-down,q=70,metadata=none,w=360/app/images/products/sliding_image/91a.jpg' },
-      { id: 'de_f4', name: 'Spinach 250g', brand: 'Fresh', price: 30, mrp: 38, reason: 'Wilts quickly', image: 'https://cdn.grofers.com/cdn-cgi/image/f=auto,fit=scale-down,q=70,metadata=none,w=360/app/images/products/sliding_image/176a.jpg' },
+      { id: 'de_f1', name: 'Bananas (6 pcs)', brand: 'Fresh', price: 40, mrp: 50, reason: 'Ripen in 1–2 days', image: '/products/p007.jpg' },
+      { id: 'de_f2', name: 'Tomato (500g)', brand: 'Fresh', price: 25, mrp: 32, reason: 'Daily cooking', image: '/products/p015.jpg' },
+      { id: 'de_f3', name: 'Onion (500g)', brand: 'Fresh', price: 20, mrp: 28, reason: 'Used every meal', image: '/products/p015.jpg' },
+      { id: 'de_f4', name: 'Spinach 250g', brand: 'Fresh', price: 30, mrp: 38, reason: 'Wilts quickly', image: '/products/p007.jpg' },
     ],
   },
   {
@@ -51,10 +51,10 @@ const CATEGORIES = [
     badge: 'Running low',
     badgeBg: 'bg-amber-200 text-amber-800',
     items: [
-      { id: 'de_g1', name: 'Britannia Brown Bread', brand: 'Britannia', price: 45, mrp: 52, reason: 'Every 2 days', image: 'https://cdn.grofers.com/cdn-cgi/image/f=auto,fit=scale-down,q=70,metadata=none,w=360/app/images/products/sliding_image/50792a.jpg' },
-      { id: 'de_g2', name: 'Tata Salt 1kg', brand: 'Tata', price: 22, mrp: 25, reason: 'Kitchen essential', image: 'https://cdn.grofers.com/cdn-cgi/image/f=auto,fit=scale-down,q=70,metadata=none,w=360/app/images/products/sliding_image/17881a.jpg' },
-      { id: 'de_g3', name: 'Fortune Oil 500ml', brand: 'Fortune', price: 72, mrp: 85, reason: 'Low in bottle', image: 'https://cdn.grofers.com/cdn-cgi/image/f=auto,fit=scale-down,q=70,metadata=none,w=360/app/images/products/sliding_image/10730a.jpg' },
-      { id: 'de_g4', name: 'Maggi 2-min Noodles', brand: 'Maggi', price: 14, mrp: 16, reason: 'Quick meal backup', image: 'https://cdn.grofers.com/cdn-cgi/image/f=auto,fit=scale-down,q=70,metadata=none,w=360/app/images/products/sliding_image/421568a.jpg' },
+      { id: 'de_g1', name: 'Britannia Brown Bread', brand: 'Britannia', price: 45, mrp: 52, reason: 'Every 2 days', image: '/products/p013.jpg' },
+      { id: 'de_g2', name: 'Tata Salt 1kg', brand: 'Tata', price: 22, mrp: 25, reason: 'Kitchen essential', image: '/products/p015.jpg' },
+      { id: 'de_g3', name: 'Fortune Oil 500ml', brand: 'Fortune', price: 72, mrp: 85, reason: 'Low in bottle', image: '/products/p014.jpg' },
+      { id: 'de_g4', name: 'Maggi 2-min Noodles', brand: 'Maggi', price: 14, mrp: 16, reason: 'Quick meal backup', image: '/products/p016.jpg' },
     ],
   },
   {
@@ -68,10 +68,10 @@ const CATEGORIES = [
     badge: 'Stock up',
     badgeBg: 'bg-orange-200 text-orange-800',
     items: [
-      { id: 'de_b1', name: 'Bru Instant Coffee 50g', brand: 'Bru', price: 89, mrp: 105, reason: 'Morning ritual', image: 'https://cdn.grofers.com/cdn-cgi/image/f=auto,fit=scale-down,q=70,metadata=none,w=360/app/images/products/sliding_image/3862a.jpg' },
-      { id: 'de_b2', name: 'Brooke Bond Tea 100g', brand: 'Brooke Bond', price: 55, mrp: 65, reason: 'Daily morning tea', image: 'https://cdn.grofers.com/cdn-cgi/image/f=auto,fit=scale-down,q=70,metadata=none,w=360/app/images/products/sliding_image/41302a.jpg' },
-      { id: 'de_b3', name: 'Bisleri Water 1L', brand: 'Bisleri', price: 20, mrp: 24, reason: 'Refill needed', image: 'https://cdn.grofers.com/cdn-cgi/image/f=auto,fit=scale-down,q=70,metadata=none,w=360/app/images/products/sliding_image/2680a.jpg' },
-      { id: 'de_b4', name: 'Tropicana Orange 1L', brand: 'Tropicana', price: 110, mrp: 130, reason: 'Morning routine', image: 'https://cdn.grofers.com/cdn-cgi/image/f=auto,fit=scale-down,q=70,metadata=none,w=360/app/images/products/sliding_image/31756a.jpg' },
+      { id: 'de_b1', name: 'Bru Instant Coffee 50g', brand: 'Bru', price: 89, mrp: 105, reason: 'Morning ritual', image: '/products/p012.jpg' },
+      { id: 'de_b2', name: 'Brooke Bond Tea 100g', brand: 'Brooke Bond', price: 55, mrp: 65, reason: 'Daily morning tea', image: '/products/p012.jpg' },
+      { id: 'de_b3', name: 'Bisleri Water 1L', brand: 'Bisleri', price: 20, mrp: 24, reason: 'Refill needed', image: '/products/p012.jpg' },
+      { id: 'de_b4', name: 'Tropicana Orange 1L', brand: 'Tropicana', price: 110, mrp: 130, reason: 'Morning routine', image: '/products/p007.jpg' },
     ],
   },
 ];

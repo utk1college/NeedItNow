@@ -68,11 +68,19 @@ export default function PaymentScreen() {
 
   const [selected, setSelected] = useState('gpay');
   const handlePay = () => {
-    navigate('/payment-processing', {
-      replace: true,
-      state: { orderTotal, deliveryMins, isEmergency, method: selected, cartItems },
-    });
-    clearCart();
+    if (selected === 'cod') {
+      clearCart();
+      navigate('/order-confirmed', {
+        replace: true,
+        state: { orderTotal, deliveryMins, isEmergency, method: selected },
+      });
+    } else {
+      navigate('/payment-processing', {
+        replace: true,
+        state: { orderTotal, deliveryMins, isEmergency, method: selected, cartItems },
+      });
+      clearCart();
+    }
   };
 
   // Derive display label for selected method
@@ -250,9 +258,13 @@ export default function PaymentScreen() {
             style={{ background: 'linear-gradient(135deg, #FF9900 0%, #FF6B00 100%)', boxShadow: '0 4px 20px rgba(255,153,0,0.35)' }}
           >
             <Lock size={15} />
-            Pay {formatPrice(orderTotal)} via {selectedLabel}
+            {selected === 'cod'
+              ? `Place Order · ${formatPrice(orderTotal)}`
+              : `Pay ${formatPrice(orderTotal)} via ${selectedLabel}`}
           </button>
-          <p className="text-center text-[10px] text-gray-400 mt-2">Simulated payment · no real charge</p>
+          <p className="text-center text-[10px] text-gray-400 mt-2">
+            {selected === 'cod' ? 'Cash on delivery · pay when it arrives' : 'Simulated payment · no real charge'}
+          </p>
         </div>
       </div>
     </div>

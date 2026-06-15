@@ -218,8 +218,8 @@ function DayPanel({ date, events, onClose, onAdd, onDelete, onShop, past }) {
       onClick={onClose}
     >
       <div
-        className="max-w-sm w-full bg-white rounded-t-3xl animate-slide-up"
-        style={{ maxHeight: 'calc(80vh)' }}
+        className="max-w-sm w-full bg-white rounded-t-3xl animate-slide-up overflow-y-auto"
+        style={{ maxHeight: 'calc(100vh - 56px)' }}
         onClick={e => e.stopPropagation()}
       >
         <div className="w-10 h-1 bg-gray-200 rounded-full mx-auto mt-3 mb-1" />
@@ -238,7 +238,8 @@ function DayPanel({ date, events, onClose, onAdd, onDelete, onShop, past }) {
           </button>
         </div>
 
-        <div className="px-5 pb-6 overflow-y-auto" style={{ maxHeight: 'calc(75vh - 100px)' }}>
+        {/* All content in one scrollable flow — no inner div with fixed height */}
+        <div className="px-5 pb-10">
           {/* Events on this day */}
           {events.length > 0 ? (
             <div className="space-y-2 mb-4">
@@ -289,9 +290,9 @@ function DayPanel({ date, events, onClose, onAdd, onDelete, onShop, past }) {
           {!past ? (
             <button
               onClick={onAdd}
-              className="w-full flex items-center justify-center gap-2 border-2 border-dashed border-[#FF9900]/40 rounded-2xl py-3 text-sm font-semibold text-[#FF9900] active:bg-orange-50 transition-all"
+              className="w-full flex items-center justify-center gap-2 border-2 border-[#FF9900] bg-orange-50 rounded-2xl py-4 text-sm font-bold text-[#FF9900] active:bg-orange-100 transition-all mt-2 shadow-sm"
             >
-              <Plus size={16} />
+              <Plus size={18} />
               Add an occasion
             </button>
           ) : (

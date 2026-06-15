@@ -5,6 +5,7 @@ import { getProductById, products } from '../data/products';
 import { DeliveryBadge } from '../components/DeliveryBadge';
 import { analyzePurchasePatterns } from '../utils/missionEngine';
 import { CategoryBrowse } from '../components/CategoryBrowse';
+import { HomeSections } from '../components/HomeSections';
 
 // ── Shopping Missions Preview tile (home screen) ─────────────────────────────
 function ShoppingMissionsPreview() {
@@ -227,9 +228,6 @@ export default function HomeScreen() {
       {/* ── SCROLLABLE FEED ─────────────────────────────────── */}
       <div className="px-4 pt-4 space-y-4 pb-28" style={{ isolation: 'isolate' }}>
 
-        {/* Emergency Mode — at the top for urgency */}
-        <PanicCard />
-
         {/* Situation Checkout — star feature */}
         <button
           onClick={() => navigate('/situation')}
@@ -254,6 +252,9 @@ export default function HomeScreen() {
         <CalendarCard />
         <ShoppingMissionsPreview />
 
+        {/* ── DEAL SECTIONS (Zepto-style) ── */}
+        <HomeSections />
+
         {/* ── BROWSE CATEGORIES ── */}
         <div className="flex items-center gap-3 -mx-4 px-4 -mt-1">
           <div className="h-px flex-1 bg-gray-200" />
@@ -261,6 +262,9 @@ export default function HomeScreen() {
           <div className="h-px flex-1 bg-gray-200" />
         </div>
         <CategoryBrowse />
+
+        {/* Emergency Mode — at the bottom */}
+        <PanicCard />
 
         {/* Footer brand */}
         <div className="flex items-center justify-center gap-2 pt-2 pb-4">

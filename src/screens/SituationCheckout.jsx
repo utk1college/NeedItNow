@@ -7,24 +7,88 @@ import { LoadingDots } from '../components/LoadingDots';
 import { DeliveryBadge } from '../components/DeliveryBadge';
 import { useCart } from '../context/CartContext';
 import { QuantityStepper } from '../components/QuantityStepper';
+import { products } from '../data/products';
+
+// ── Image resolver: match item name against products catalogue ────────────────
+// Returns the best matching product image, or a category-based fallback.
+const CATEGORY_FALLBACK_IMAGES = {
+  health:        '/products/p001.jpg', // Dettol
+  grocery:       '/products/p009.jpg', // Atta
+  baby:          '/products/p017.jpg', // Pampers
+  cleaning:      '/products/p021.jpg', // Harpic
+  party:         '/products/p026.jpg', // Balloons
+  personal_care: '/products/p029.jpg', // Colgate
+};
+
+function resolveImage(item) {
+  // 1. Item already has an image (e.g. from FALLBACKS)
+  if (item.image) return item.image;
+
+  const nameLower = (item.name ?? '').toLowerCase();
+  const brandLower = (item.brand ?? '').toLowerCase();
+
+  // 2. Exact or partial name match against products catalogue
+  const byName = products.find(p =>
+    nameLower.includes(p.name.split(' ')[0].toLowerCase()) ||
+    p.name.toLowerCase().includes(nameLower.split(' ')[0])
+  );
+  if (byName) return byName.image;
+
+  // 3. Brand match
+  const byBrand = products.find(p => p.brand.toLowerCase() === brandLower);
+  if (byBrand) return byBrand.image;
+
+  // 4. Keyword heuristics
+  if (nameLower.includes('fever') || nameLower.includes('paracetamol') || nameLower.includes('calpol'))
+    return '/products/p002.jpg';
+  if (nameLower.includes('thermometer'))    return '/products/p003.jpg';
+  if (nameLower.includes('ors') || nameLower.includes('electral')) return '/products/p004.jpg';
+  if (nameLower.includes('vicks') || nameLower.includes('vaporu')) return '/products/p005.jpg';
+  if (nameLower.includes('bandage') || nameLower.includes('band-aid')) return '/products/p006.jpg';
+  if (nameLower.includes('glucose'))        return '/products/p007.jpg';
+  if (nameLower.includes('ibuprofen'))      return '/products/p008.jpg';
+  if (nameLower.includes('atta') || nameLower.includes('flour')) return '/products/p009.jpg';
+  if (nameLower.includes('milk'))           return '/products/p010.jpg';
+  if (nameLower.includes('chip') || nameLower.includes("lay's") || nameLower.includes('lays')) return '/products/p011.jpg';
+  if (nameLower.includes('cola') || nameLower.includes('thums') || nameLower.includes('water') || nameLower.includes('juice') || nameLower.includes('drink')) return '/products/p012.jpg';
+  if (nameLower.includes('cookie') || nameLower.includes('biscuit') || nameLower.includes('bread')) return '/products/p013.jpg';
+  if (nameLower.includes('oil'))            return '/products/p014.jpg';
+  if (nameLower.includes('salt'))           return '/products/p015.jpg';
+  if (nameLower.includes('noodle') || nameLower.includes('maggi')) return '/products/p016.jpg';
+  if (nameLower.includes('diaper') || nameLower.includes('pamper')) return '/products/p017.jpg';
+  if (nameLower.includes('powder'))         return '/products/p018.jpg';
+  if (nameLower.includes('plate') || nameLower.includes('disposable')) return '/products/p025.jpg';
+  if (nameLower.includes('balloon'))        return '/products/p026.jpg';
+  if (nameLower.includes('candle'))         return '/products/p027.jpg';
+  if (nameLower.includes('toothpaste') || nameLower.includes('colgate')) return '/products/p029.jpg';
+  if (nameLower.includes('body wash') || nameLower.includes('dove')) return '/products/p030.jpg';
+  if (nameLower.includes('razor') || nameLower.includes('gillette')) return '/products/p031.jpg';
+  if (nameLower.includes('pad') || nameLower.includes('whisper') || nameLower.includes('sanitary')) return '/products/p032.jpg';
+  if (nameLower.includes('dettol') || nameLower.includes('antiseptic')) return '/products/p001.jpg';
+  if (nameLower.includes('toilet') || nameLower.includes('harpic')) return '/products/p021.jpg';
+  if (nameLower.includes('detergent') || nameLower.includes('laundry')) return '/products/p022.jpg';
+
+  // 5. Last resort — first health product
+  return '/products/p001.jpg';
+}
 
 const FALLBACKS = {
   'kid fever': [
-    { name: 'Calpol 500mg Tablets', brand: 'GSK', price: 32, reason: 'Reduces fever fast in kids', image: 'https://cdn.grofers.com/cdn-cgi/image/f=auto,fit=scale-down,q=70,metadata=none,w=360/app/images/products/sliding_image/282543a.jpg' },
-    { name: 'Omron Digital Thermometer', brand: 'Omron', price: 249, reason: 'Monitor temp accurately', image: 'https://cdn.grofers.com/cdn-cgi/image/f=auto,fit=scale-down,q=70,metadata=none,w=360/app/images/products/sliding_image/387370a.jpg' },
-    { name: 'Electral ORS Sachets', brand: 'Electral', price: 65, reason: 'Prevent dehydration', image: 'https://cdn.grofers.com/cdn-cgi/image/f=auto,fit=scale-down,q=70,metadata=none,w=360/app/images/products/sliding_image/4828a.jpg' },
-    { name: 'Vicks VapoRub 50g', brand: 'Vicks', price: 79, reason: 'Ease congestion at night', image: 'https://cdn.grofers.com/cdn-cgi/image/f=auto,fit=scale-down,q=70,metadata=none,w=360/app/images/products/sliding_image/153073a.jpg' },
+    { name: 'Calpol 500mg Tablets', brand: 'GSK', price: 32, reason: 'Reduces fever fast in kids', image: '/products/p002.jpg' },
+    { name: 'Omron Digital Thermometer', brand: 'Omron', price: 249, reason: 'Monitor temp accurately', image: '/products/p003.jpg' },
+    { name: 'Electral ORS Sachets', brand: 'Electral', price: 65, reason: 'Prevent dehydration', image: '/products/p004.jpg' },
+    { name: 'Vicks VapoRub 50g', brand: 'Vicks', price: 79, reason: 'Ease congestion at night', image: '/products/p005.jpg' },
   ],
   'guests coming': [
-    { name: 'Paper Plates (50 pcs)', brand: 'Areca', price: 120, reason: 'Hassle-free serving', image: 'https://cdn.grofers.com/cdn-cgi/image/f=auto,fit=scale-down,q=70,metadata=none,w=360/app/images/products/sliding_image/357952a.jpg' },
-    { name: 'Thums Up 2L Bottle', brand: 'Thums Up', price: 95, reason: 'Drinks sorted for everyone', image: 'https://cdn.grofers.com/cdn-cgi/image/f=auto,fit=scale-down,q=70,metadata=none,w=360/app/images/products/sliding_image/116b.jpg' },
-    { name: "Lay's Party Pack Assorted", brand: "Lay's", price: 175, reason: 'Snacking while they arrive', image: 'https://cdn.grofers.com/cdn-cgi/image/f=auto,fit=scale-down,q=70,metadata=none,w=360/app/images/products/sliding_image/502786a.jpg' },
-    { name: 'Britannia Good Day Cookies', brand: 'Britannia', price: 45, reason: 'Quick dessert option', image: 'https://cdn.grofers.com/cdn-cgi/image/f=auto,fit=scale-down,q=70,metadata=none,w=360/app/images/products/sliding_image/10907a.jpg' },
+    { name: 'Paper Plates (50 pcs)', brand: 'Areca', price: 120, reason: 'Hassle-free serving', image: '/products/p025.jpg' },
+    { name: 'Thums Up 2L Bottle', brand: 'Thums Up', price: 95, reason: 'Drinks sorted for everyone', image: '/products/p012.jpg' },
+    { name: "Lay's Party Pack Assorted", brand: "Lay's", price: 175, reason: 'Snacking while they arrive', image: '/products/p028.jpg' },
+    { name: 'Britannia Good Day Cookies', brand: 'Britannia', price: 45, reason: 'Quick dessert option', image: '/products/p013.jpg' },
   ],
   'power cut': [
-    { name: 'Birthday Cake Candles 24pcs', brand: 'Camlin', price: 45, reason: 'Emergency lighting', image: 'https://cdn.grofers.com/cdn-cgi/image/f=auto,fit=scale-down,q=70,metadata=none,w=360/app/images/products/sliding_image/465609a.jpg' },
-    { name: 'Bisleri Water 1L (6 pack)', brand: 'Bisleri', price: 120, reason: 'Store drinking water', image: 'https://cdn.grofers.com/cdn-cgi/image/f=auto,fit=scale-down,q=70,metadata=none,w=360/app/images/products/sliding_image/2680a.jpg' },
-    { name: 'Britannia Good Day Cookies', brand: 'Britannia', price: 45, reason: 'No-cook snack option', image: 'https://cdn.grofers.com/cdn-cgi/image/f=auto,fit=scale-down,q=70,metadata=none,w=360/app/images/products/sliding_image/10907a.jpg' },
+    { name: 'Birthday Cake Candles 24pcs', brand: 'Camlin', price: 45, reason: 'Emergency lighting', image: '/products/p027.jpg' },
+    { name: 'Thums Up 2L Bottle', brand: 'Thums Up', price: 95, reason: 'Store drinking water', image: '/products/p012.jpg' },
+    { name: 'Britannia Good Day Cookies', brand: 'Britannia', price: 45, reason: 'No-cook snack option', image: '/products/p013.jpg' },
   ],
 };
 
@@ -47,9 +111,11 @@ export default function SituationCheckout() {
   const [quantities, setQuantities] = useState({});
 
   const initItems = (result) => {
-    setItems(result);
+    // Attach a resolved image to every item so the render never uses a wrong fallback
+    const enriched = result.map(item => ({ ...item, image: resolveImage(item) }));
+    setItems(enriched);
     const sel = {}, qty = {};
-    result.forEach((_, idx) => { sel[idx] = true; qty[idx] = 1; });
+    enriched.forEach((_, idx) => { sel[idx] = true; qty[idx] = 1; });
     setSelected(sel);
     setQuantities(qty);
   };
@@ -85,7 +151,7 @@ export default function SituationCheckout() {
         name: item.name,
         brand: item.brand,
         price: item.price,
-        image: item.image ?? `https://cdn.grofers.com/cdn-cgi/image/f=auto,fit=scale-down,q=70,metadata=none,w=360/app/images/products/sliding_image/391893a.jpg'Item')}`,
+        image: item.image,
         qty: quantities[origIdx] || 1,
       };
     });
@@ -135,7 +201,7 @@ export default function SituationCheckout() {
                       className="mt-1 accent-[#FF9900] w-4 h-4 flex-shrink-0"
                     />
                     <img
-                      src={item.image ?? `https://cdn.grofers.com/cdn-cgi/image/f=auto,fit=scale-down,q=70,metadata=none,w=360/app/images/products/sliding_image/391893a.jpg'Item')}`}
+                      src={item.image}
                       alt={item.name}
                       className="w-14 h-14 rounded-xl object-cover bg-gray-50"
                     />

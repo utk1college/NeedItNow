@@ -6,11 +6,11 @@ import { formatPrice } from '../utils/helpers';
 import { products } from '../data/products';
 
 const EMERGENCY_ITEMS = [
-  { id: 'em1', name: 'Electral ORS Sachets (10 pcs)', price: 65, image: 'https://cdn.grofers.com/cdn-cgi/image/f=auto,fit=scale-down,q=70,metadata=none,w=360/app/images/products/sliding_image/4828a.jpg', qty: 1 },
-  { id: 'em2', name: 'Band-Aid Flexible Strips 30ct', price: 120, image: 'https://cdn.grofers.com/cdn-cgi/image/f=auto,fit=scale-down,q=70,metadata=none,w=360/app/images/products/sliding_image/451895a.jpg', qty: 1 },
-  { id: 'em3', name: 'Dettol Antiseptic Liquid 250ml', price: 89, image: 'https://cdn.grofers.com/cdn-cgi/image/f=auto,fit=scale-down,q=70,metadata=none,w=360/app/images/products/sliding_image/3539a.jpg', qty: 1 },
-  { id: 'em4', name: 'Calpol 500mg Tablets', price: 32, image: 'https://cdn.grofers.com/cdn-cgi/image/f=auto,fit=scale-down,q=70,metadata=none,w=360/app/images/products/sliding_image/282543a.jpg', qty: 1 },
-  { id: 'em5', name: 'Glucose-D Orange 500g', price: 95, image: 'https://cdn.grofers.com/cdn-cgi/image/f=auto,fit=scale-down,q=70,metadata=none,w=360/app/images/products/sliding_image/12563a.jpg', qty: 1 },
+  { id: 'em1', name: 'Electral ORS Sachets (10 pcs)', price: 65, image: '/products/p004.jpg', qty: 1 },
+  { id: 'em2', name: 'Band-Aid Flexible Strips 30ct', price: 120, image: '/products/p006.jpg', qty: 1 },
+  { id: 'em3', name: 'Dettol Antiseptic Liquid 250ml', price: 89, image: '/products/p001.jpg', qty: 1 },
+  { id: 'em4', name: 'Calpol 500mg Tablets', price: 32, image: '/products/p002.jpg', qty: 1 },
+  { id: 'em5', name: 'Glucose-D Orange 500g', price: 95, image: '/products/p007.jpg', qty: 1 },
 ];
 
 // ── AddMoreRow — each row in the "Add more" modal ────────────────────────────
@@ -266,5 +266,6 @@ export default function PanicMode() {
     </div>
   );
 }
+
 
 

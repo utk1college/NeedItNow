@@ -66,7 +66,7 @@ export default function PhotoToCart() {
       name: result.suggestion.name,
       brand: result.suggestion.brand,
       price: result.suggestion.price,
-      image: `https://cdn.grofers.com/cdn-cgi/image/f=auto,fit=scale-down,q=70,metadata=none,w=360/app/images/products/sliding_image/2680a.jpg`,
+      image: `/products/p001.jpg`,
     });
     setAdded(true);
   };
@@ -123,7 +123,7 @@ export default function PhotoToCart() {
             <div className="h-px bg-gray-100" />
             <div className="flex items-center gap-3">
               <img
-                src={`https://cdn.grofers.com/cdn-cgi/image/f=auto,fit=scale-down,q=70,metadata=none,w=360/app/images/products/sliding_image/2680a.jpg`}
+                src={`/products/p001.jpg`}
                 alt={result.suggestion.name}
                 className="w-16 h-16 rounded-xl object-cover bg-gray-50"
               />

@@ -1,6 +1,6 @@
 import { useState, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { ArrowLeft, Search, SlidersHorizontal, X, Plus, Check, EyeOff } from 'lucide-react';
+import { ArrowLeft, Search, SlidersHorizontal, X, Plus, Minus, EyeOff } from 'lucide-react';
 import { products } from '../data/products';
 import { formatPrice } from '../utils/helpers';
 import { useCart } from '../context/CartContext';
@@ -36,7 +36,7 @@ const CATEGORY_OPTIONS = [
 
 export default function SearchScreen() {
   const navigate = useNavigate();
-  const { addItem } = useCart();
+  const { addItem, updateQty } = useCart();
 
   const [query, setQuery] = useState('');
   const [activePreset, setActivePreset] = useState(null);
@@ -44,7 +44,7 @@ export default function SearchScreen() {
   const [category, setCategory] = useState('all');
   const [sort, setSort] = useState('relevance');
   const [maxPrice, setMaxPrice] = useState(1000);
-  const [addedIds, setAddedIds] = useState(new Set());
+  const [qtys, setQtys] = useState({});
   const [incognito, setIncognito] = useState(false);
 
   // Apply a smart preset
@@ -113,8 +113,25 @@ export default function SearchScreen() {
 
   const handleAddToCart = (product) => {
     addItem(product, 1);
-    setAddedIds(prev => new Set([...prev, product.id]));
-    setTimeout(() => setAddedIds(prev => { const n = new Set(prev); n.delete(product.id); return n; }), 1500);
+    setQtys(prev => ({ ...prev, [product.id]: 1 }));
+  };
+
+  const handleIncQty = (product) => {
+    const newQty = (qtys[product.id] ?? 1) + 1;
+    setQtys(prev => ({ ...prev, [product.id]: newQty }));
+    updateQty(product.id, newQty);
+  };
+
+  const handleDecQty = (product) => {
+    const current = qtys[product.id] ?? 1;
+    const newQty = current - 1;
+    if (newQty <= 0) {
+      setQtys(prev => { const n = { ...prev }; delete n[product.id]; return n; });
+      updateQty(product.id, 0);
+    } else {
+      setQtys(prev => ({ ...prev, [product.id]: newQty }));
+      updateQty(product.id, newQty);
+    }
   };
 
   const activeFilterCount = (category !== 'all' ? 1 : 0) + (maxPrice < 1000 ? 1 : 0) + (sort !== 'relevance' ? 1 : 0);
@@ -336,7 +353,8 @@ export default function SearchScreen() {
       <div className="px-4 grid grid-cols-2 gap-2.5">
         {filteredProducts.map(product => {
           const discount = Math.round(((product.mrp - product.price) / product.mrp) * 100);
-          const isAdded  = addedIds.has(product.id);
+          const qty = qtys[product.id];
+          const isAdded = qty !== undefined && qty > 0;
           return (
             <div key={product.id} className={`rounded-2xl p-2.5 flex flex-col border ${
               incognito
@@ -365,18 +383,34 @@ export default function SearchScreen() {
               <div className="flex items-center gap-1 mt-1">
                 <span className="text-[10px] text-green-500 font-medium">{product.deliveryMins} min</span>
               </div>
-              <button
-                onClick={() => handleAddToCart(product)}
-                className={`mt-auto pt-2 w-full py-1.5 rounded-lg text-[11px] font-semibold active:scale-95 transition-all flex items-center justify-center gap-1 ${
-                  isAdded
-                    ? 'bg-green-500/20 text-green-400 border border-green-500/30'
-                    : incognito
-                    ? 'bg-[#FF9900]/15 text-[#FF9900] border border-[#FF9900]/20'
-                    : 'bg-[#FF9900]/10 text-[#FF9900] border border-[#FF9900]/20'
-                }`}
-              >
-                {isAdded ? <><Check size={11} /> Added</> : <><Plus size={11} /> Add</>}
-              </button>
+              {isAdded ? (
+                <div className="mt-auto pt-2 flex items-center justify-between gap-1">
+                  <button
+                    onClick={() => handleDecQty(product)}
+                    className="w-6 h-6 rounded-md bg-[#FF9900]/15 border border-[#FF9900]/30 flex items-center justify-center active:scale-90 transition-all"
+                  >
+                    <Minus size={11} className="text-[#FF9900]" />
+                  </button>
+                  <span className={`text-sm font-bold tabular-nums ${incognito ? 'text-white' : 'text-gray-900'}`}>{qty}</span>
+                  <button
+                    onClick={() => handleIncQty(product)}
+                    className="w-6 h-6 rounded-md bg-[#FF9900] flex items-center justify-center active:scale-90 transition-all"
+                  >
+                    <Plus size={11} className="text-white" />
+                  </button>
+                </div>
+              ) : (
+                <button
+                  onClick={() => handleAddToCart(product)}
+                  className={`mt-auto pt-2 w-full py-1.5 rounded-lg text-[11px] font-semibold active:scale-95 transition-all flex items-center justify-center gap-1 ${
+                    incognito
+                      ? 'bg-[#FF9900]/15 text-[#FF9900] border border-[#FF9900]/20'
+                      : 'bg-[#FF9900]/10 text-[#FF9900] border border-[#FF9900]/20'
+                  }`}
+                >
+                  <Plus size={11} /> Add
+                </button>
+              )}
             </div>
           );
         })}
