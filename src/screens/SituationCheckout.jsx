@@ -11,15 +11,6 @@ import { products } from '../data/products';
 
 // ── Image resolver: match item name against products catalogue ────────────────
 // Returns the best matching product image, or a category-based fallback.
-const CATEGORY_FALLBACK_IMAGES = {
-  health:        '/products/p001.jpg', // Dettol
-  grocery:       '/products/p009.jpg', // Atta
-  baby:          '/products/p017.jpg', // Pampers
-  cleaning:      '/products/p021.jpg', // Harpic
-  party:         '/products/p026.jpg', // Balloons
-  personal_care: '/products/p029.jpg', // Colgate
-};
-
 function resolveImage(item) {
   // 1. Item already has an image (e.g. from FALLBACKS)
   if (item.image) return item.image;
