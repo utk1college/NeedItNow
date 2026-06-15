@@ -138,11 +138,13 @@ npm run dev
 Create `.env`:
 
 ```env
-VITE_API_URL=https://k82jc863lh.execute-api.ap-south-2.amazonaws.com/default
-VITE_LLM_PROXY_URL=https://k82jc863lh.execute-api.ap-south-2.amazonaws.com/default/needitnow-bedrock-proxy
+# AWS API Gateway base URL (Lambda handles all routes)
+VITE_API_URL=https://<your-api-gateway-id>.execute-api.<region>.amazonaws.com/<stage>
+VITE_LLM_PROXY_URL=https://<your-api-gateway-id>.execute-api.<region>.amazonaws.com/<stage>/<function-name>
 
-VITE_COGNITO_DOMAIN=ap-south-2ehnitpcvs.auth.ap-south-2.amazoncognito.com
-VITE_COGNITO_CLIENT_ID=bcj54suvga12o6t3nh0ggbg4c
+# Amazon Cognito
+VITE_COGNITO_DOMAIN=<your-pool-id>.auth.<region>.amazoncognito.com
+VITE_COGNITO_CLIENT_ID=<your-app-client-id>
 VITE_COGNITO_REDIRECT=http://localhost:5173
 ```
 
