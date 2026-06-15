@@ -6,9 +6,16 @@
 
 ## What This Is
 
-**NeedItNow** is an AI-powered quick-commerce mobile web app built for a hackathon. It reimagines urgent grocery and essential delivery with AI-powered features, behavioral pattern detection, and smart automation. Tagline: *"Amazon learns your shopping routines and prepares them before you even ask."*
+**NeedItNow** is an AI-powered quick-commerce mobile web app built for Amazon HackOn. It reimagines urgent grocery and essential delivery with AI-powered features, behavioral pattern detection, smart automation, and **real backend persistence**. Tagline: *"Amazon learns your shopping routines and prepares them before you even ask."*
 
 Target user: Urban Indian consumer needing groceries/medicines delivered in 10–15 minutes. Prototype user is "Aahil Sharma" — a young parent in Koramangala, Bengaluru with a baby at home.
+
+**Now with:**
+- ✅ Amazon DynamoDB for orders + user profiles
+- ✅ Amazon Cognito for real authentication (email-verified sign-ups)
+- ✅ API Gateway routes for backend communication
+- ✅ Order persistence across sessions
+- ✅ Live order history synced from database
 
 ---
 
@@ -19,6 +26,9 @@ Target user: Urban Indian consumer needing groceries/medicines delivered in 10�
 | Frontend | React 19 + Vite 8 + Tailwind CSS 3 |
 | Routing | React Router v7 |
 | State | React Context API (CartContext) |
+| Auth | Amazon Cognito (Hosted UI, PKCE flow) |
+| Database | Amazon DynamoDB |
+| API | AWS API Gateway + Lambda |
 | Icons | lucide-react |
 | Fonts | Plus Jakarta Sans (UI), Syne (display/hero), Inter (body) |
 | AI Primary | Gemini 2.5 Flash (Google) |
@@ -33,19 +43,34 @@ Target user: Urban Indian consumer needing groceries/medicines delivered in 10�
 ```
 React Frontend (Mobile Web, 390px)
         │
-        │  POST { systemPrompt, userMessage, imageBase64? }
-        ▼
-AWS Lambda (API Gateway)  ← lambda/index.mjs
+        ├─────────────────────────────┐
+        │                             │
+        │  POST { systemPrompt, userMessage, imageBase64? }    (AI only)
+        │  POST /order (save to DB)
+        │  GET /orders/{userId} (fetch from DB)
+        │  POST /user (upsert profile)
         │
-        ├──► Gemini 2.5 Flash  (primary)
-        └──► Groq Llama-3.3-70B (fallback)
-                          │
-                          │  returns { text: "{ JSON string }" }
-                          ▼
-                    React Frontend
+        ▼                             ▼
+AWS Lambda Router            Amazon Cognito
+        │                    (Email sign-up/in)
+        ├──► Gemini 2.5 Flash         │
+        └──► Groq Llama-3.3-70B       │
+                                      │
+                                      ▼
+                            Amazon DynamoDB
+                            - needitnow-orders
+                            - needitnow-users
 ```
 
-**Zero API keys in the frontend.** All AI goes through Lambda. Lambda URL in `.env` as `VITE_LLM_PROXY_URL`.
+**Authentication:**
+- User logs in via Cognito Hosted UI → Authorization Code + PKCE flow
+- Session stored in `localStorage` (auto-restores on reload)
+- Demo mode fallback: if Cognito env vars blank, app runs with "Continue as Demo User"
+
+**Data Persistence:**
+- Every order after checkout POSTs to Lambda → DynamoDB
+- ProfileScreen fetches live orders from DynamoDB + merges with seed data
+- No data loss across page reloads or browser sessions (for authenticated users)
 
 ---
 
@@ -61,6 +86,42 @@ const USE_MOCK = false;  // real Gemini/Groq via Lambda (costs credits)
 **Default `true`. Never commit `false`. Always revert after testing.**
 
 When `USE_MOCK = true`, all calls hit `src/utils/mockLLM.js` which detects the feature by `systemPrompt` keyword and returns hardcoded JSON instantly.
+
+---
+
+## Authentication (Cognito)
+
+`.env` controls Cognito:
+```
+VITE_COGNITO_DOMAIN=ap-south-2ehnitpcvs.auth.ap-south-2.amazoncognito.com
+VITE_COGNITO_CLIENT_ID=bcj54suvga12o6t3nh0ggbg4c
+VITE_COGNITO_REDIRECT=http://localhost:5173
+```
+
+- **Leave blank** → demo mode (one-tap login, no real auth)
+- **Fill in** → real Cognito login flow
+
+LoginScreen shows "Sign in with Amazon" if configured, else "Continue as Demo User".
+
+---
+
+## Backend API
+
+`.env` backend URL:
+```
+VITE_API_URL=https://k82jc863lh.execute-api.ap-south-2.amazonaws.com/default
+```
+
+Routes (all via Lambda):
+| Method | Path | Purpose |
+|---|---|---|
+| POST | `/order` | Save order to DynamoDB |
+| GET | `/orders/{userId}` | Fetch user's orders |
+| GET | `/user/{userId}` | Fetch user profile |
+| POST | `/user` | Create/update user profile |
+| POST | `/ai` | LLM proxy (original) |
+
+All endpoints fail gracefully — order save fails? It logs a warning and the order is lost (demo data remains).
 
 ---
 
