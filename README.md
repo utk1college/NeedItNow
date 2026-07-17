@@ -2,8 +2,6 @@
 
 > AI-powered ultra-fast delivery — Amazon HackOn submission
 
-**Live:** [https://master.d2s5tb7hcodz7v.amplifyapp.com](https://master.d2s5tb7hcodz7v.amplifyapp.com)
-
 A mobile-first React web app that reimagines urgent grocery and essentials delivery with six AI-driven features. Real AWS backend — Cognito auth, DynamoDB persistence, Lambda + API Gateway.
 
 ---
